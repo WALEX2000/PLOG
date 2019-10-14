@@ -30,38 +30,48 @@ initialBoard([
             ]).
 
 symbol(whitePiece, S) :-
-    S='W'.
+    S='X'.
 
 symbol(blackPiece, S) :-
-    S='B'.
+    S='O'.
 
 symbol(emptyCell, S) :-
     S=' '.
 
-printGame([]).
+printCell(Cell) :-
+    write('| '),
+    symbol(Cell, Char),
+    write(Char),
+    write(' ').
 
-printGame([BoardPair | Rest]) :-
-    nl,
-    write('   | 1 | 2 | 3 | 4 | 5 |\t| 6 | 7 | 8 | 9 | 10|\n'),
-    write('---|---|---|---|---|---|\t|---|---|---|---|---|\n'),
-    printBoardPair(BoardPair, 0),
-    printGame(Rest).
+printRow([]) :-
+    write('|').
+
+printRow([Cell|Rest]) :-
+    printCell(Cell),
+    printRow(Rest).
 
 printBoardPair(_, 4) :-
     nl.
 
-printBoardPair([Board1 | [Board2 | _]], N) :-
-    printLine([_ | [_ | Board1]], [_ | [_ | Board2]]),
+printBoardPair(BoardPair, N) :-
+    nth0(0, BoardPair, Board1),
+    nth0(1, BoardPair, Board2),
+    nth0(N, Board1, Row1),
+    nth0(N, Board2, Row2),
+    printRow(Row1),
+    write('\t'),
+    printRow(Row2),
     nl,
-    N1 is N + 1,
-    printBoardPair([Board1 | [Board2 | _]], N1).
+    N1 is N+1,
+    printBoardPair(BoardPair, N1).
 
-printLine([], []).
-printLine([], [Element2 | Line2]) :-
-    symbol(Element2, S),
-    write(S),
-    printLine([], Line2).
-printLine([Element1 | Line1], _) :-
-    symbol(Element1, S),
-    write(S),
-    printLine(Line1, _).
+printBoard([BP1|[BP2|_]]) :-
+    printBoardPair(BP1,0),
+    write('-----------------------------------------'),
+    nl,
+    printBoardPair(BP2,0).
+
+displayGame :-
+    initialBoard(Board),
+    printBoard(Board).
