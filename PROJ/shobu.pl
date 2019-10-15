@@ -60,7 +60,7 @@ printBoardPair(BoardPair, N) :-
     nth0(N, Board1, Row1),
     nth0(N, Board2, Row2),
     printRow(Row1),
-    write('\t'),
+    write('    '),
     printRow(Row2),
     nl,
     N1 is N+1,
@@ -68,10 +68,12 @@ printBoardPair(BoardPair, N) :-
 
 printBoard([BP1|[BP2|_]]) :-
     printBoardPair(BP1,0),
-    write('-----------------------------------------'),
-    nl,
+    write('--------------------------------------'),
+    nl,nl,
     printBoardPair(BP2,0).
 
 displayGame :-
+    use_module(library(lists)),
     initialBoard(Board),
+    nl,
     printBoard(Board).
