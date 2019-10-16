@@ -1,3 +1,5 @@
+:-use_module(library(lists)).
+
 initialBoard([
                 [
                     [ 
@@ -100,6 +102,9 @@ symbol(b, S) :-
 symbol(e, S) :-
     S='_'.
 
+printDivisor :-
+    write('+---+---+---+---+\t+---+---+---+---+').
+
 printCell(Cell) :-
     write('|_'),
     symbol(Cell, Char),
@@ -114,15 +119,17 @@ printRow([Cell|Rest]) :-
     printRow(Rest).
 
 printBoardPair(_, 4) :-
-    nl.
+    printDivisor.
 
 printBoardPair(BoardPair, N) :-
     nth0(0, BoardPair, Board1),
     nth0(1, BoardPair, Board2),
     nth0(N, Board1, Row1),
     nth0(N, Board2, Row2),
+    printDivisor,
+    nl,
     printRow(Row1),
-    write('    '),
+    write('\t'),
     printRow(Row2),
     nl,
     N1 is N+1,
