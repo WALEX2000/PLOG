@@ -110,6 +110,11 @@ printMidDivisor :-
 
 printBotDivisor :-
     write('╚═══╩═══╩═══╩═══╝\t╚═══╩═══╩═══╩═══╝').
+printDivisor(3) :-
+    printBotDivisor.
+
+printDivisor(_) :-
+    printMidDivisor.
 
 printCell(Cell) :-
     write('║ '),
@@ -124,20 +129,7 @@ printRow([Cell|Rest]) :-
     printCell(Cell),
     printRow(Rest).
 
-printBoardPair(_, 4) :-
-    printBotDivisor.
-
-printBoardPair(BoardPair, 3) :-
-    nth0(0, BoardPair, Board1),
-    nth0(1, BoardPair, Board2),
-    nth0(3, Board1, Row1),
-    nth0(3, Board2, Row2),
-    nl,
-    printRow(Row1),
-    write('\t'),
-    printRow(Row2),
-    nl,
-    printBoardPair(BoardPair, 4).
+printBoardPair(_, 4).
 
 printBoardPair(BoardPair, N) :-
     nth0(0, BoardPair, Board1),
@@ -149,7 +141,7 @@ printBoardPair(BoardPair, N) :-
     write('\t'),
     printRow(Row2),
     nl,
-    printMidDivisor,
+    printDivisor(N),
     N1 is N+1,
     printBoardPair(BoardPair, N1).
 
