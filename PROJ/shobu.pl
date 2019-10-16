@@ -1,48 +1,110 @@
 initialBoard([
                 [
                     [ 
-                        [whitePiece, whitePiece, whitePiece, whitePiece],
-                        [emptyCell, emptyCell, emptyCell, emptyCell],
-                        [emptyCell, emptyCell, emptyCell, emptyCell],
-                        [blackPiece, blackPiece, blackPiece, blackPiece]
+                        [b, b, b, b],
+                        [e, e, e, e],
+                        [e, e, e, e],
+                        [w, w, w, w]
                     ],
                     [
-                        [whitePiece, whitePiece, whitePiece, whitePiece],
-                        [emptyCell, emptyCell, emptyCell, emptyCell],
-                        [emptyCell, emptyCell, emptyCell, emptyCell],
-                        [blackPiece, blackPiece, blackPiece, blackPiece]
+                        [b, b, b, b],
+                        [e, e, e, e],
+                        [e, e, e, e],
+                        [w, w, w, w]
                     ]
                 ],
                 [
                     [
-                        [whitePiece, whitePiece, whitePiece, whitePiece],
-                        [emptyCell, emptyCell, emptyCell, emptyCell],
-                        [emptyCell, emptyCell, emptyCell, emptyCell],
-                        [blackPiece, blackPiece, blackPiece, blackPiece]
+                        [b, b, b, b],
+                        [e, e, e, e],
+                        [e, e, e, e],
+                        [w, w, w, w]
                     ],
                     [
-                        [whitePiece, whitePiece, whitePiece, whitePiece],
-                        [emptyCell, emptyCell, emptyCell, emptyCell],
-                        [emptyCell, emptyCell, emptyCell, emptyCell],
-                        [blackPiece, blackPiece, blackPiece, blackPiece]
+                        [b, b, b, b],
+                        [e, e, e, e],
+                        [e, e, e, e],
+                        [w, w, w, w]
                     ]
                 ]
             ]).
 
-symbol(whitePiece, S) :-
+intermidiateBoard([
+                [
+                    [ 
+                        [e, b, b, b],
+                        [e, b, e, e],
+                        [e, w, e, e],
+                        [w, w, w, e]
+                    ],
+                    [
+                        [b, e, e, b],
+                        [e, e, b, b],
+                        [e, e, e, e],
+                        [w, w, w, e]
+                    ]
+                ],
+                [
+                    [
+                        [e, b, b, b],
+                        [w, e, e, e],
+                        [e, e, e, e],
+                        [w, w, e, w]
+                    ],
+                    [
+                        [b, b, b, b],
+                        [e, e, e, e],
+                        [e, w, e, e],
+                        [w, e, w, w]
+                    ]
+                ]
+            ]).
+
+endBoard([
+                [
+                    [ 
+                        [e, b, e, b],
+                        [e, e, b, b],
+                        [e, w, e, e],
+                        [w, w, w, e]
+                    ],
+                    [
+                        [b, e, e, b],
+                        [e, e, e, b],
+                        [e, e, e, e],
+                        [e, e, e, b]
+                    ]
+                ],
+                [
+                    [
+                        [e, w, b, b],
+                        [e, e, e, e],
+                        [e, e, e, w],
+                        [w, e, e, e]
+                    ],
+                    [
+                        [b, b, b, b],
+                        [w, e, e, e],
+                        [e, w, e, e],
+                        [e, e, w, w]
+                    ]
+                ]
+            ]).
+
+symbol(w, S) :-
     S='X'.
 
-symbol(blackPiece, S) :-
+symbol(b, S) :-
     S='O'.
 
-symbol(emptyCell, S) :-
-    S=' '.
+symbol(e, S) :-
+    S='_'.
 
 printCell(Cell) :-
-    write('| '),
+    write('|_'),
     symbol(Cell, Char),
     write(Char),
-    write(' ').
+    write('_').
 
 printRow([]) :-
     write('|').
@@ -67,13 +129,15 @@ printBoardPair(BoardPair, N) :-
     printBoardPair(BoardPair, N1).
 
 printBoard([BP1|[BP2|_]]) :-
+    write('_________________    _________________\n'),
     printBoardPair(BP1,0),
     write('--------------------------------------'),
-    nl,nl,
+    nl,
+    write('_________________    _________________\n'),
     printBoardPair(BP2,0).
 
 displayGame :-
     use_module(library(lists)),
-    initialBoard(Board),
+    intermidiateBoard(Board),
     nl,
     printBoard(Board).
