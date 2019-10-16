@@ -1,4 +1,5 @@
 :-use_module(library(lists)).
+encoding('UTF-8').
 
 initialBoard([
                 [
@@ -94,10 +95,10 @@ endBoard([
             ]).
 
 symbol(w, S) :-
-    S='X'.
+    S='⛂'.
 
 symbol(b, S) :-
-    S='O'.
+    S='⛀'.
 
 symbol(e, S) :-
     S=' '.
