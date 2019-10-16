@@ -31,7 +31,7 @@ initialBoard([
                 ]
             ]).
 
-intermidiateBoard([
+intermediateBoard([
                 [
                     [ 
                         [e, b, b, b],
@@ -142,7 +142,6 @@ printBoard([BP1|[BP2|_]]) :-
     nl,
     printBoardPair(BP2,0).
 
-displayGame :-
-    intermidiateBoard(Board),
+displayGame(Board) :-
     nl,
     printBoard(Board).
