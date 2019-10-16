@@ -102,44 +102,66 @@ symbol(b, S) :-
 symbol(e, S) :-
     S=' '.
 
-printDivisor :-
-    write('+---+---+---+---+\t+---+---+---+---+').
+printTopDivisor:-
+    write('╔═══╦═══╦═══╦═══╗\t╔═══╦═══╦═══╦═══╗').
+
+printMidDivisor :-
+    write('╠═══╬═══╬═══╬═══╣\t╠═══╬═══╬═══╬═══╣').
+
+printBotDivisor :-
+    write('╚═══╩═══╩═══╩═══╝\t╚═══╩═══╩═══╩═══╝').
 
 printCell(Cell) :-
-    write('| '),
+    write('║ '),
     symbol(Cell, Char),
     write(Char),
     write(' ').
 
 printRow([]) :-
-    write('|').
+    write('║').
 
 printRow([Cell|Rest]) :-
     printCell(Cell),
     printRow(Rest).
 
 printBoardPair(_, 4) :-
-    printDivisor.
+    printBotDivisor.
+
+printBoardPair(BoardPair, 3) :-
+    nth0(0, BoardPair, Board1),
+    nth0(1, BoardPair, Board2),
+    nth0(3, Board1, Row1),
+    nth0(3, Board2, Row2),
+    nl,
+    printRow(Row1),
+    write('\t'),
+    printRow(Row2),
+    nl,
+    printBoardPair(BoardPair, 4).
 
 printBoardPair(BoardPair, N) :-
     nth0(0, BoardPair, Board1),
     nth0(1, BoardPair, Board2),
     nth0(N, Board1, Row1),
     nth0(N, Board2, Row2),
-    printDivisor,
     nl,
     printRow(Row1),
     write('\t'),
     printRow(Row2),
     nl,
+    printMidDivisor,
     N1 is N+1,
     printBoardPair(BoardPair, N1).
 
 printBoard([BP1|[BP2|_]]) :-
+    printTopDivisor,
     printBoardPair(BP1,0),
-    nl,
-    write('\no----------------------------------------o\n'),
-    nl,
+    nl,nl,
+    write('  .-.-.   .-.-.   .-.-.   .-.-.   .-.-.  \n'),
+    write(' / / \\ \\ / / \\ \\ / / \\ \\ / / \\ \\ / / \\ \\\n'),
+    write('\`-\'   \`-\`-\'   \`-\`-\'   \`-\`-\'   \`-\`-\'   \`-\`-\'\n'),
+    nl,nl,
+    printTopDivisor,
     printBoardPair(BP2,0).
 
 displayGame(Board) :-
