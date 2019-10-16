@@ -100,16 +100,16 @@ symbol(b, S) :-
     S='O'.
 
 symbol(e, S) :-
-    S='_'.
+    S=' '.
 
 printDivisor :-
     write('+---+---+---+---+\t+---+---+---+---+').
 
 printCell(Cell) :-
-    write('|_'),
+    write('| '),
     symbol(Cell, Char),
     write(Char),
-    write('_').
+    write(' ').
 
 printRow([]) :-
     write('|').
@@ -136,15 +136,13 @@ printBoardPair(BoardPair, N) :-
     printBoardPair(BoardPair, N1).
 
 printBoard([BP1|[BP2|_]]) :-
-    write('_________________    _________________\n'),
     printBoardPair(BP1,0),
-    write('--------------------------------------'),
     nl,
-    write('_________________    _________________\n'),
+    write('\no----------------------------------------o\n'),
+    nl,
     printBoardPair(BP2,0).
 
 displayGame :-
-    use_module(library(lists)),
     intermidiateBoard(Board),
     nl,
     printBoard(Board).
