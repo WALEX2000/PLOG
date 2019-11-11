@@ -17,7 +17,7 @@ printTopDivModules(N_module, MaxSize):-
 printTopDivisor(BoardSize):-
     write('  ╔'),
     printTopDivModules(1,BoardSize),
-    write('\t╔'),
+    write('     ╔'),
     printTopDivModules(1,BoardSize).
 
 printMidDivisorModules(MaxSize, MaxSize):-
@@ -31,7 +31,7 @@ printMidDivisorModules(N_module, MaxSize):-
 printMidDivisor(BoardSize) :-
     write('  ╠'),
     printMidDivisorModules(1,BoardSize),
-    write('\t╠'),
+    write('     ╠'),
     printMidDivisorModules(1,BoardSize).
 
 printBotDivisorModules(MaxSize, MaxSize):-
@@ -45,7 +45,7 @@ printBotDivisorModules(N_module, MaxSize):-
 printBotDivisor(BoardSize) :-
     write('  ╚'),
     printBotDivisorModules(1,BoardSize),
-    write('\t╚'),
+    write('     ╚'),
     printBotDivisorModules(1,BoardSize).
 
 printDivisor(BoardSize, BoardSize) :-
@@ -65,15 +65,6 @@ printRow([Cell|Rest]) :-
     printCell(Cell),
     printRow(Rest).
 
-letter(0, 0, L) :- L='A'.
-letter(1, 0, L) :- L='B'.
-letter(2, 0, L) :- L='C'.
-letter(3, 0, L) :- L='D'.
-letter(0, 1, L) :- L='E'.
-letter(1, 1, L) :- L='F'.
-letter(2, 1, L) :- L='G'.
-letter(3, 1, L) :- L='H'.
-
 % L returns the ASCII code for the correct letter
 letter(NRow, HalfN, BoardSize, L):-
     L is 65 + NRow + BoardSize*HalfN.
@@ -84,7 +75,7 @@ printPairRows(Board1, Board2, BoardSize, Nrow, HalfN):-
     nl,
     letter(Nrow, HalfN, BoardSize, Letter), char_code(Char, Letter), write(Char), write(' '), %print row letter identifier
     printRow(Row1),
-    write('\t'),
+    write('     '),
     printRow(Row2),
     write(' '), write(Char),
     nl,
@@ -106,7 +97,7 @@ printfColID(BoardSize, BoardSize):-
 printfColID(Id, BoardSize):-
     write(' '),
     ((Id < 10, write(Id), write('  '));
-     (Id > 9, write(Id))),
+     (Id > 9, write(Id), write(' '))),
     Id1 is Id + 1,
     printfColID(Id1, BoardSize).
 

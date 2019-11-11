@@ -106,3 +106,34 @@ test() :-
     display_game(Board1, 1),!,
     move(Board1, Board2, 0, 0, 1, 1),
     display_game(Board2, 1).
+
+costumBoard.
+
+createList(0, _, []).
+createList(Size, Char, [Char|Rest]):-
+    N is Size - 1,
+    createList(N, Char, Rest).
+
+
+
+fillSmallBoard(B, Size, Size):-
+    createList(Size, 'b', Blist),
+    B = [Blist|Rest], N is Size - 1,
+    fillSmallBoard(Rest, Size, N).
+
+fillSmallBoard([Elem], Size, 1):-
+    createList(Size, 'w', Wlist),
+    Elem = Wlist.
+
+fillSmallBoard([Elem|Rest], Size, N):-
+    createList(Size, 'e', Elist),
+    Elem = Elist, N1 is N - 1,
+    fillSmallBoard(Rest, Size, N1).
+
+createSmallBoard(B, Size):-
+    fillSmallBoard(B, Size, Size).
+
+createBoard(Size) :-
+    createSmallBoard(B, Size),
+    Board = [[B,B],[B,B]],
+    display_game(Board, 1).
