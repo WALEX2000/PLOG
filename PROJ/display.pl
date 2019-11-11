@@ -121,9 +121,16 @@ printColumnIDs(BoardSize) :-
     write('\n').
 
 % TODO print line accordingly to boardSize
-printBoardsSeparator :-
+printRope(BoardSize, BoardSize).
+printRope(Nstrokes, BoardSize):-
+    write('-'),
+    N is Nstrokes + 1,
+    printRope(N, BoardSize).
+
+printBoardsSeparator(BoardSize) :-
     nl,
-    write('\no-----------------------------------------o\n'),
+    Nstrokes is (BoardSize+1)*2 + (BoardSize*3*2) + 5 + 2,
+    write('\no'), printRope(0, Nstrokes), write('o\n'),
     nl.
 
 % Dar Print ao Board independentemente do tamanho de cada board
@@ -137,7 +144,7 @@ printBoard([BP1|[BP2|_]]) :-
     % print top half
     printBoardPair(BP1, BoardSize, 0),
     %Print Rope
-    printBoardsSeparator,
+    printBoardsSeparator(BoardSize),
     % print bottom half
     printBoardPair(BP2, BoardSize, 1),
     %Print the board's column numbers again for bottom
