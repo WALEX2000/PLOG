@@ -106,8 +106,8 @@ test() :-
     display_game(Board1, 1),!,
     move(Board1, Board2, 0, 0, 1, 1),
     display_game(Board2, 1),!,
-    move(Board1, Board2, 5, 5, 6, 6),
-    display_game(Board2, 2).
+    move(Board2, Board3, 7, 7, 6, 7),
+    display_game(Board3, 2),!.
 
 costumBoard.
 
