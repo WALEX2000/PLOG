@@ -32,26 +32,7 @@ move(InBoard, OutBoard, OrigLine, OrigCol, DestLine, DestCol) :-
     setTile(InBoard, TempBoard, OrigLine, OrigCol, 'e', PastSymbol),
     setTile(TempBoard, OutBoard, DestLine, DestCol, PastSymbol, _).
 
-setTile(InBoard, OutBoard, Line, Col, Symbol, PastSymbol) :-
-    Col@>=4, 
-        (Line@>=4, 
-            (BoardLine is Line-4, BoardCol is Col-4,
-                switchTile(InBoard, OutBoard, BoardLine, BoardCol, Symbol, PastSymbol)
-            );
-            (BoardLine is Line, BoardCol is Col-4,
-                switchTile(InBoard, OutBoard, BoardLine, BoardCol, Symbol, PastSymbol)
-            )
-        );
-        (Line@>=4, 
-            (BoardLine is Line-4, BoardCol is Col,
-                switchTile(InBoard, OutBoard, BoardLine, BoardCol, Symbol, PastSymbol)
-            );
-            (BoardLine is Line, BoardCol is Col,
-                switchTile(InBoard, OutBoard, BoardLine, BoardCol, Symbol, PastSymbol)
-            )
-        ).
-
-switchTile(InBoard, OutBoard, GeneralLine, GeneralCol, Symbol, PastSymbol) :-
+setTile(InBoard, OutBoard, GeneralLine, GeneralCol, Symbol, PastSymbol) :-
     generalToBoardCoords(GeneralLine, GeneralCol, BoardLine, BoardCol, X, Y),
     nth0(X, InBoard, BoardPair, BoardRest), 
     nth0(Y, BoardPair, SmallBoard, BoardPairRest),
@@ -62,10 +43,13 @@ switchTile(InBoard, OutBoard, GeneralLine, GeneralCol, Symbol, PastSymbol) :-
     nth0(Y, OutBoardPair, OutSmallBoard, BoardPairRest),
     nth0(X, OutBoard, OutBoardPair, BoardRest).
 
+%Converts general coordinates (InGeneralLine InGeneralCol) 
+%to board-specific coordinates (OutBoardLine OutBoardCol), 
+%along with which board is being referenced (OutBoardX OutBoardY)
 generalToBoardCoords(InGeneralLine, InGeneralCol, OutBoardLine, OutBoardCol, OutBoardX, OutBoardY):-
-    (InGeneralLine > 4,
-        (OutBoardLine = InGeneralLine - 4, OutBoardY = 2);
-        (OutBoardLine = InGeneralLine, OutBoardY = 1)),
-    (InGeneralCol > 4,
-        (OutBoardCol = InGeneralCol - 4, OutBoardX = 2);
-        (OutBoardCol = InGeneralCol, OutBoardX = 1)).
+    (InGeneralLine @>= 4,
+        (NewLine is InGeneralLine - 4, OutBoardLine = NewLine, OutBoardY = 1);
+        (OutBoardLine = InGeneralLine, OutBoardY = 0)),
+    (InGeneralCol @>= 4,
+        (NewCol is InGeneralCol - 4, OutBoardCol = NewCol, OutBoardX = 1);
+        (OutBoardCol = InGeneralCol, OutBoardX = 0)).
