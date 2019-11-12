@@ -107,14 +107,12 @@ test() :-
     move(Board1, Board2, 0, 0, 1, 1),
     display_game(Board2, 1).
 
-costumBoard.
+%Functions to create a board with variable size
 
 createList(0, _, []).
 createList(Size, Char, [Char|Rest]):-
     N is Size - 1,
     createList(N, Char, Rest).
-
-
 
 fillSmallBoard(B, Size, Size):-
     createList(Size, 'b', Blist),
