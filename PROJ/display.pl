@@ -151,5 +151,6 @@ display_game(Board, Player) :-
     printBoard(Board).
 
 % TODO Preciso Por o Board com cores e tamanho variavel
-% Tamanho variavel é simplesmente chamar a função que dá print de cada row x vezes
-% E o tamanho de cada Row tem de ser variavel modelar
+% Sempre que estou a fazer write de qualquer coisa dentro de uma Row tenho de fazer:
+% ansi_format([bg('#1f1e1e')], 'TEXT', []), ou ansi_format([bg('white')], 'TEXT', []),
+% dependendo da cor to tabuleiro em questão
