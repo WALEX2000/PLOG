@@ -16,13 +16,17 @@ valid_moves(Board, Player, ListOfMoves) :-
 %Next, depending on the current move get a differente board Pair (1st move, just get 1st or 2nd pos| 2nd move needs to build the board depending on the 1st move)
 valid_move(Board, PieceType|_, Xi/Yi, Xf/Yf) :-
     %First determine size of board
-    nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
+    trace,
+    Xi@<8, Yi@<8, Xf@<8, Yf@<8,
+    Xi@>=0, Yi@>=0, Xf@>=0, Yf@>=0.
+    %nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     %Determinar se Xi/Yi corresponde a uma peça do jogador correto no taubleiro
-    generalToBoardCoords(Yi, Xi, Board, Rowi, Coli, BoardX, BoardY),
-    nth0(BoardY, Board, BP), nth0(BoardX, Board, SmallBoard),
+    %generalToBoardCoords(Yi, Xi, Board, Rowi, Coli, BoardX, BoardY),
+    %nth0(BoardY, Board, BP), nth0(BoardX, BP, SmallBoard),
     %Para já apenas fazer 1º jogada
-    checkIfPieceExists(SmallBoard, PieceType, Coli/Rowi),
-    Xf = Xi, Yf = Yi.
+    %checkIfPieceExists(SmallBoard, PieceType, Coli/Rowi),
+    %Coli < BoardSize, Rowi < BoardSize,
+    %Xf = Coli, Yf = Rowi.
     
 
 checkIfPieceExists(SmallBoard, PieceType, Col/Row):-
@@ -55,10 +59,10 @@ setTile(InBoard, OutBoard, GeneralLine, GeneralCol, Symbol, PastSymbol) :-
 %to board-specific coordinates (OutBoardLine OutBoardCol), 
 %along with which board is being referenced (OutBoardX OutBoardY)
 generalToBoardCoords(InGeneralLine, InGeneralCol, InBoard, OutBoardLine, OutBoardCol, OutBoardX, OutBoardY):-
-    nth0(0, InBoard, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
-    (InGeneralLine @>= BoardSize,
-        (NewLine is InGeneralLine - BoardSize, OutBoardLine = NewLine, OutBoardY = 1);
+    nth0(0, InBoard, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize), trace,
+    ((InGeneralLine @>= BoardSize,
+        (NewLine is InGeneralLine - BoardSize, OutBoardLine = NewLine, OutBoardY = 1, write(OutBoardY)));
         (OutBoardLine = InGeneralLine, OutBoardY = 0)),
-    (InGeneralCol @>= BoardSize,
-        (NewCol is InGeneralCol - BoardSize, OutBoardCol = NewCol, OutBoardX = 1);
+    ((InGeneralCol @>= BoardSize,
+        (NewCol is InGeneralCol - BoardSize, OutBoardCol = NewCol, OutBoardX = 1, write(OutBoardX)));
         (OutBoardCol = InGeneralCol, OutBoardX = 0)).

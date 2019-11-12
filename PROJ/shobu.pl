@@ -139,7 +139,7 @@ createBoard(Size, Board) :-
     display_game(Board, 1).
 
 testValidPos(Moves):-
-    createBoard(2, Board),
+    createBoard(4, Board),
     
-    valid_moves(Board, 'w|1', Moves),
+    valid_moves(Board, w|1, Moves),
     notrace.
