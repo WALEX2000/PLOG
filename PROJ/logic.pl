@@ -2,7 +2,30 @@
 
 %Player: w|1, w|2, b|1, b|2 (White or Black, 1º ou 2º jogada)
 valid_moves(Board, Player, ListOfMoves) :-
-    findall([OrigLine/OrigCol, DestLine/DestCol], valid_move(Board, Player, OrigCol/OrigLine, DestCol/DestLine), ListOfMoves).
+    nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
+    %create a pair X/Y from 0/0 to Size-1/Size-1,
+    TotalSize is BoardSize*2,
+    getAllMoves(TotalSize, 0,0, Board, Player, ListOfMoves).
+
+%Get X/Y is the current board positon
+%The ListOfMoves is filled with [Xf1/Yf1, Xf2/Yf2].
+getAllMoves(Size, X,Y, Board, Player, [Head|Rest]):-
+    (X > 8, write(Size)); 
+    write(X), write("/"), write(Y), write("\n"),
+    %Get All moves for this piece
+    (valid_move(Board, Player, X/Y, PossibleMoves),
+    %add Possible moves to ListOfMoves
+    Rest = [PossibleMoves|More],
+    %Test next Pair
+    X1 is X + 1,
+    getAllMoves(Size, X1,Y, Board, Player, More));
+    X1 is X + 1,
+    getAllMoves(Size, X1,Y, Board, Player, More),
+
+getAllMoves(Size,Size, Size, _, _, _).
+getAllMoves(Size, Y, Size, Board, Player, ListOfMoves):-
+    Y1 is Y + 1,
+    getAllMoves(0,Y1, Size, Board, Player, ListOfMoves).
 
 %Passar lista de Peças (Posições) que se pode mexer
 %Cada peça pode mexer 1 ou 2 casa em cada direção desde que esteja dentro do board (> 0 && < boardSize)
@@ -14,31 +37,19 @@ valid_moves(Board, Player, ListOfMoves) :-
 %Needs to have full board in order to check if there'll be any valid moves after this play is made
 %Needs to have a board pair consisting only of the current 2 smallBoards that the player can move pieces in
 %Next, depending on the current move get a differente board Pair (1st move, just get 1st or 2nd pos| 2nd move needs to build the board depending on the 1st move)
+
 valid_move(Board, PieceType|_, Xi/Yi, Xf/Yf) :-
     %First determine size of board
-    trace,
-    Xi@<8, Yi@<8, Xf@<8, Yf@<8,
-    Xi@>=0, Yi@>=0, Xf@>=0, Yf@>=0.
-    %nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     %Determinar se Xi/Yi corresponde a uma peça do jogador correto no taubleiro
-    %generalToBoardCoords(Yi, Xi, Board, Rowi, Coli, BoardX, BoardY),
-    %nth0(BoardY, Board, BP), nth0(BoardX, BP, SmallBoard),
+    generalToBoardCoords(Yi, Xi, Board, Rowi, Coli, BoardX, BoardY),
+    nth0(BoardY, Board, BP), nth0(BoardX, BP, SmallBoard),
     %Para já apenas fazer 1º jogada
-    %checkIfPieceExists(SmallBoard, PieceType, Coli/Rowi),
-    %Coli < BoardSize, Rowi < BoardSize,
-    %Xf = Coli, Yf = Rowi.
-    
+    checkIfPieceExists(SmallBoard, PieceType, Coli/Rowi),
+    Xf = Coli, Yf = Rowi. 
 
 checkIfPieceExists(SmallBoard, PieceType, Col/Row):-
     nth0(Row, SmallBoard, List), nth0(Col, List, Piece),
     Piece = PieceType.
-
-%Moves in horizontal line (same line)
-%valid_move(Board, Player, OrigLine, OrigCol, OrigLine, DestCol) :-
-
-%Moves in vertical line (same column)
-%valid_move(Board, Player, OrigLine, OrigCol, DestLine, OrigCol) :-
-
 
 move(InBoard, OutBoard, OrigLine, OrigCol, DestLine, DestCol) :-
     setTile(InBoard, TempBoard, OrigLine, OrigCol, 'e', PastSymbol),
@@ -59,10 +70,10 @@ setTile(InBoard, OutBoard, GeneralLine, GeneralCol, Symbol, PastSymbol) :-
 %to board-specific coordinates (OutBoardLine OutBoardCol), 
 %along with which board is being referenced (OutBoardX OutBoardY)
 generalToBoardCoords(InGeneralLine, InGeneralCol, InBoard, OutBoardLine, OutBoardCol, OutBoardX, OutBoardY):-
-    nth0(0, InBoard, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize), trace,
+    nth0(0, InBoard, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     ((InGeneralLine @>= BoardSize,
-        (NewLine is InGeneralLine - BoardSize, OutBoardLine = NewLine, OutBoardY = 1, write(OutBoardY)));
+        (NewLine is InGeneralLine - BoardSize, OutBoardLine = NewLine, OutBoardY = 1));
         (OutBoardLine = InGeneralLine, OutBoardY = 0)),
     ((InGeneralCol @>= BoardSize,
-        (NewCol is InGeneralCol - BoardSize, OutBoardCol = NewCol, OutBoardX = 1, write(OutBoardX)));
+        (NewCol is InGeneralCol - BoardSize, OutBoardCol = NewCol, OutBoardX = 1));
         (OutBoardCol = InGeneralCol, OutBoardX = 0)).
