@@ -133,7 +133,13 @@ fillSmallBoard([Elem|Rest], Size, N):-
 createSmallBoard(B, Size):-
     fillSmallBoard(B, Size, Size).
 
-createBoard(Size) :-
+createBoard(Size, Board) :-
     createSmallBoard(B, Size),
     Board = [[B,B],[B,B]],
     display_game(Board, 1).
+
+testValidPos(Moves):-
+    createBoard(2, Board),
+    
+    valid_moves(Board, 'w|1', Moves),
+    notrace.
