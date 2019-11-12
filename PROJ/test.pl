@@ -7,7 +7,7 @@ hi(a, d).
 :-use_module(library(ansi_term)).
 
 doStuff():-
-    ansi_format([bg(204, 203, 200), fg('black')], ' ●  ○ ', []),
-    ansi_format([bg(54, 53, 50), fg('white')], ' ○  ● ', []).
+    ansi_format([bg('white'), fg('black')], ' ●  ○ ', []),
+    ansi_format([bg('black'), fg('white')], ' ○  ● ', []).
 
 %Problem, background colors aren't displaying outside of VSCode terminal
