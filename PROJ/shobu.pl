@@ -39,7 +39,7 @@ intermediateBoard([
                     [ 
                         [e, b, b, b],
                         [e, b, e, e],
-                        [e, w, e, e],
+                        [w, e, e, e],
                         [w, w, w, e]
                     ],
                     [
@@ -146,5 +146,7 @@ createBoard(Size, Board):-
     display_game(Board, 1).
 
 testValidPos(Moves):-
-    createBoard(4, Board), 
-    valid_moves(Board, w|1, Moves).
+    %createBoard(4, Board),
+    intermediateBoard(Board), 
+    display_game(Board, 1),
+    valid_moves(Board, b|1, Moves).
