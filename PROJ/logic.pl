@@ -61,7 +61,7 @@ getAllMoves(Size, Y, Size, Board, Player, ListOfMoves):-
 %[Segudna jogada]: Se colidir com alguma peça do adversário verificar se essa pessa pode ser arrastada para trás(Se a pos. atrás está ou fora do board ou livre).
 %Note quando uma peça é arrastada para fora do board deve ser eliminada (talvez seja só não voltar a coloca-la dps de a tirar)
 
-%Needs to have full board in order to check if there'll be any valid moves after this play is made
+%Needs to have full board in order to check if there´ll be any valid moves after this play is made
 %Needs to have a board pair consisting only of the current 2 smallBoards that the player can move pieces in
 %Next, depending on the current move get a differente board Pair (1st move, just get 1st or 2nd pos| 2nd move needs to build the board depending on the 1st move)
 
