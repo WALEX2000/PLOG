@@ -6,64 +6,85 @@ symbol(b,'●').
 symbol(e,' ').
 
 % Mudar para dar print dependendo do tamanho de cada tabuleiro
-printTopDivModules(MaxSize, MaxSize):-
-     write('═══╗').
+printTopDivModules(MaxSize, MaxSize, Color):-
+    (Color=='white',
+        (ansi_format([bg('black'), fg('white')], '═══╗', []));
+        (ansi_format([bg('white'), fg('black')], '═══╗', []))).
 
-printTopDivModules(N_module, MaxSize):-
-     write('═══╦'),
+printTopDivModules(N_module, MaxSize, Color):-
+    (Color=='white',
+        (ansi_format([bg('black'), fg('white')], '═══╦', []));
+        (ansi_format([bg('white'), fg('black')], '═══╦', []))),
      N is N_module + 1,
-     printTopDivModules(N,MaxSize).
+     printTopDivModules(N,MaxSize, Color).
 
 printTopDivisor(BoardSize):-
-    write('  ╔'),
-    printTopDivModules(1,BoardSize),
-    write('     ╔'),
-    printTopDivModules(1,BoardSize).
+    write('  '),
+    ansi_format([bg('black'), fg('white')], '╔', []),
+    printTopDivModules(1,BoardSize, 'white'),
+    write('     '),
+    ansi_format([bg('white'), fg('black')], '╔', []),
+    printTopDivModules(1,BoardSize, 'black').
 
-printMidDivisorModules(MaxSize, MaxSize):-
-    write('═══╣').
+printMidDivisorModules(MaxSize, MaxSize, Color):-
+    (Color=='white',
+        (ansi_format([bg('black'), fg('white')], '═══╣', []));
+        (ansi_format([bg('white'), fg('black')], '═══╣', []))).
 
-printMidDivisorModules(N_module, MaxSize):-
-    write('═══╬'),
+printMidDivisorModules(N_module, MaxSize, Color):-
+    (Color=='white',
+        (ansi_format([bg('black'), fg('white')], '═══╬', []));
+        (ansi_format([bg('white'), fg('black')], '═══╬', []))),
     N is N_module + 1,
-    printMidDivisorModules(N,MaxSize).
+    printMidDivisorModules(N,MaxSize, Color).
 
 printMidDivisor(BoardSize) :-
-    write('  ╠'),
-    printMidDivisorModules(1,BoardSize),
-    write('     ╠'),
-    printMidDivisorModules(1,BoardSize).
+    write('  '),
+    ansi_format([bg('black'), fg('white')], '╠', []),
+    printMidDivisorModules(1,BoardSize, 'white'),
+    write('     '),
+    ansi_format([bg('white'), fg('black')], '╠', []),
+    printMidDivisorModules(1,BoardSize, 'black').
 
-printBotDivisorModules(MaxSize, MaxSize):-
-    write('═══╝').
+printBotDivisorModules(MaxSize, MaxSize, Color):-
+    (Color=='white',
+        (ansi_format([bg('black'), fg('white')], '═══╝', []));
+        (ansi_format([bg('white'), fg('black')], '═══╝', []))).
 
-printBotDivisorModules(N_module, MaxSize):-
-    write('═══╩'),
+printBotDivisorModules(N_module, MaxSize, Color):-
+    (Color=='white',
+        (ansi_format([bg('black'), fg('white')], '═══╩', []));
+        (ansi_format([bg('white'), fg('black')], '═══╩', []))),
     N is N_module + 1,
-    printBotDivisorModules(N,MaxSize).
+    printBotDivisorModules(N,MaxSize, Color).
 
 printBotDivisor(BoardSize) :-
-    write('  ╚'),
-    printBotDivisorModules(1,BoardSize),
-    write('     ╚'),
-    printBotDivisorModules(1,BoardSize).
+    write('  '),
+    ansi_format([bg('black'), fg('white')], '╚', []),
+    printBotDivisorModules(1,BoardSize, 'white'),
+    write('     '),
+    ansi_format([bg('white'), fg('black')], '╚', []),
+    printBotDivisorModules(1,BoardSize, 'black').
 
 printDivisor(BoardSize, BoardSize) :-
     printBotDivisor(BoardSize).
 printDivisor(_, BoardSize) :-
     printMidDivisor(BoardSize).
 
-printCell(Cell) :-
-    write('║ '),
+printCell(Cell, Color) :-
     symbol(Cell, Char),
-    write(Char),
-    write(' ').
+    (Color=='white',
+        (ansi_format([bg('black'), fg('white')], '║ ~w ', [Char]));
+        (ansi_format([bg('white'), fg('black')], '║ ~w ', [Char]))).
 
-printRow([]) :-
-    write('║').
-printRow([Cell|Rest]) :-
-    printCell(Cell),
-    printRow(Rest).
+printRow([], Color) :-
+    (Color=='white',
+        (ansi_format([bg('black'), fg('white')], '║', []));
+        (ansi_format([bg('white'), fg('black')], '║', []))).
+
+printRow([Cell|Rest], Color) :-
+    printCell(Cell, Color),
+    printRow(Rest, Color).
 
 % L returns the ASCII code for the correct letter
 letter(NRow, HalfN, BoardSize, L):-
@@ -74,9 +95,9 @@ printPairRows(Board1, Board2, BoardSize, Nrow, HalfN):-
     nth0(Nrow, Board1, Row1), nth0(Nrow, Board2, Row2), %Get rows from both boards
     nl,
     letter(Nrow, HalfN, BoardSize, Letter), char_code(Char, Letter), write(Char), write(' '), %print row letter identifier
-    printRow(Row1),
+    printRow(Row1, 'white'),
     write('     '),
-    printRow(Row2),
+    printRow(Row2, 'black'),
     write(' '), write(Char),
     nl,
     Temp is Nrow + 1, printDivisor(Temp, BoardSize),
@@ -130,7 +151,7 @@ printBoardsSeparator(BoardSize) :-
 % para isso tenho de ir ao primeiro elem de BP1 (Primeiro board) e dps ir ao primeiro elemento desse (primeira linha) e contar no numero de elementos presentes.
 printBoard([BP1|[BP2|_]]) :-
     nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
-    %Print the board's column numbers
+    %Print the board´s column numbers
     printColumnIDs(BoardSize),
     % print top half
     printBoardPair(BP1, BoardSize, 0),
@@ -138,7 +159,7 @@ printBoard([BP1|[BP2|_]]) :-
     printBoardsSeparator(BoardSize),
     % print bottom half
     printBoardPair(BP2, BoardSize, 1),
-    %Print the board's column numbers again for bottom
+    %Print the board´s column numbers again for bottom
     nl, printColumnIDs(BoardSize).
 
 % Need to identify which move we are in as well and highlight accordingly

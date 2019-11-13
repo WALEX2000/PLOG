@@ -1,6 +1,7 @@
 :-use_module(library(lists)).
 :-consult('display.pl').
 :-consult('logic.pl').
+:-consult('input.pl').
 
 initialBoard([
                 [
@@ -109,6 +110,12 @@ test() :-
     move(Board2, Board3, 7, 7, 6, 7),
     display_game(Board3, 2),!.
 
+test2() :-
+    readPlay(Line, Col, 3),
+    write(Line),
+    write('\n'),
+    write(Col).
+
 %Functions to create a board with variable size
 
 createList(0, _, []).
@@ -133,13 +140,12 @@ fillSmallBoard([Elem|Rest], Size, N):-
 createSmallBoard(B, Size):-
     fillSmallBoard(B, Size, Size).
 
-createBoard(Size, Board) :-
+createBoard(Size, Board):-
     createSmallBoard(B, Size),
     Board = [[B,B],[B,B]],
     display_game(Board, 1).
 
 testValidPos(Moves):-
     createBoard(4, Board),
-    
     valid_moves(Board, w|1, Moves),
     notrace.
