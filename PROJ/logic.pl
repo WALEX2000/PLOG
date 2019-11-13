@@ -1,7 +1,33 @@
 :-use_module(library(lists)).
 
 %Player: w|1, w|2, b|1, b|2 (White or Black, 1º ou 2º jogada)
+%ListOfMoves vais ter o formato [{Xi/Yi|Xf/Yf}, {Xi/Yi|Xf/Yf}, ....] em que cada "elemento" representa uma posição inicial duma peça e a sua pos. final
+%Usar findAll ou SetOf mas temos de gerar "Factos" para isto n dar merda
 valid_moves(Board, Player, ListOfMoves) :-
+    nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
+    TotalSize is BoardSize*2,
+    findall(Yi/Xi, getAllPieces(Board, Player, TotalSize, Yi/Xi), ListOfMoves), printList(ListOfMoves).
+    %findall({Yi/Xi|Yf/Xf}, getAllMoves(Board, Player, Yi/Xi, Yf/Xf), ListOfMoves).
+printList([]).
+printList([Head|Rest]):-
+    write(Head), nl, printList(Rest).
+
+insideBoard(TotalSize, Y/X):-
+    LastPos is TotalSize - 1,
+    numlist(0, LastPos, L),
+    member(Y, L), member(X, L).
+    
+getAllPieces(Board, PieceType|Move, TotalSize, Yi/Xi):-
+    insideBoard(TotalSize, Yi/Xi),
+    (Move = 1, getMove1Piece(PieceType, Board, Yi/Xi)),
+
+getMove1Piece(PieceType, Board, Yi/Xi):-
+    generalToBoardCoords(Xi, Yi, Board, Row, Col, Bx, By),
+    nth0(By, Board, BP), nth0(Bx, BP, SmallBoard),
+    checkIfPieceExists(SmallBoard, PieceType, Col/Row).    
+
+
+getAllMoves(Board, Player, Xi/Yi, Xf/Yf) :-
     nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     %create a pair X/Y from 0/0 to Size-1/Size-1,
     TotalSize is BoardSize*2,
@@ -10,6 +36,7 @@ valid_moves(Board, Player, ListOfMoves) :-
 %Get X/Y is the current board positon
 %The ListOfMoves is filled with [Xf1/Yf1, Xf2/Yf2].
 getAllMoves(Size, X,Y, Board, Player, [Head|Rest]):-
+    %Retornar uma lista com todas as posições válidas
     (X > 8, write(Size)); 
     write(X), write("/"), write(Y), write("\n"),
     %Get All moves for this piece
@@ -47,7 +74,7 @@ valid_move(Board, PieceType|_, Xi/Yi, Xf/Yf) :-
     checkIfPieceExists(SmallBoard, PieceType, Coli/Rowi),
     Xf = Coli, Yf = Rowi. 
 
-checkIfPieceExists(SmallBoard, PieceType, Col/Row):-
+checkIfPieceExists(SmallBoard, PieceType, Row/Col):-
     nth0(Row, SmallBoard, List), nth0(Col, List, Piece),
     Piece = PieceType.
 
