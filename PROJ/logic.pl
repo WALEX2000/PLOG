@@ -92,7 +92,8 @@ getMove2Piece(Board, Yi/Xi, PieceType, LastMove):-
 
 outOfRange(SmallBoard, Y/X):-
     length(SmallBoard, Length), L is Length - 1,
-    (\+between(0, L, X); \+between(0, L, Y)).
+    (\+between(0, L, X);
+    \+between(0, L, Y), between(0, L, X)).
     
 moveRange(Ydiff, 0, Range):-
     abs(Ydiff, Range).
@@ -114,15 +115,15 @@ checkIfCanPushPiece(Yi/Xi, Yf/Xf, SmallBoard, PiecePushed):-
     (checkIfPieceExists(SmallBoard, e, Yf/Xf), PiecePushed = [Yi/Xi, Yf/Xf]).
 
 checkIfPathIsValid(Yi/Xi, Yf/Xf, SmallBoard, PieceType, PiecePushed):-
-    %Yi/Xi = 1/1, trace,
+    %Yi/Xi = 2/1, trace,
     ((PieceType = w, EnemyPiece = b); (PieceType = b, EnemyPiece = w)),
     Ydiff is Yf - Yi, Xdiff is Xf - Xi,
     %In case movement has only 1 pos in length
     ((moveRange(Ydiff, Xdiff, 1),
-     (checkIfPieceExists(SmallBoard, e, Yf/Xf), PiecePushed = []); %If it's empty it's all good
+     ((checkIfPieceExists(SmallBoard, e, Yf/Xf), PiecePushed = []); %If it's empty it's all good
      (checkIfPieceExists(SmallBoard, EnemyPiece, Yf/Xf),
       NextY is Yf + Ydiff, NextX is Xf + Xdiff,
-      checkIfCanPushPiece(Yf/Xf, NextY/NextX, SmallBoard, PiecePushed)));
+      checkIfCanPushPiece(Yf/Xf, NextY/NextX, SmallBoard, PiecePushed))));
     %In case movement has 2 pos in length
     (moveRange(Ydiff, Xdiff, 2),
      IntY is Yi + Ydiff/2, IntX is Xi + Xdiff/2,

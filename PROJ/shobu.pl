@@ -155,4 +155,4 @@ testValidPos2(Moves):-
     %createBoard(4, Board),
     intermediateBoard(Board), 
     display_game(Board, 1),
-    valid_moves(Board, b|2, [1/6, 2/5], Moves), notrace.
+    valid_moves(Board, w|2, [7/0, 5/2], Moves), notrace.
