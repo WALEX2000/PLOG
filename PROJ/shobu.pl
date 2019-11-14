@@ -38,15 +38,3 @@ test() :-
     display_game(Board2, 1),!,
     move(Board2, Board3, 7, 7, 6, 7),
     display_game(Board3, 2),!.
-
-testValidPos(Moves):-
-    %createBoard(4, Board),
-    intermediateBoard(Board), 
-    display_game(Board, 1),
-    valid_moves(Board, b|1, Moves).
-
-testValidPos2(Moves):-
-    %createBoard(4, Board),
-    intermediateBoard(Board), 
-    display_game(Board, 1),
-    valid_moves(Board, w|2, [7/6, 6/7], Moves), notrace.
