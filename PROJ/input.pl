@@ -1,4 +1,4 @@
-readPlay(Line, Col, BoardSize):-
+readCell(Line, Col, BoardSize):-
     RealSize is BoardSize*2,
     read_line_to_codes(user_input, Codes),
     string_codes(String, Codes),

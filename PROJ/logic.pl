@@ -15,7 +15,7 @@ gameOver(Board):-
 
 %Checks if both white and black piece types exist in small board
 existsBothPieceTypes(SmallBoard) :-
-    %hasBlackPiece(SmallBoard),
+    hasBlackPiece(SmallBoard),
     hasWhitePiece(SmallBoard).
 
 %Checks if white piece types exist in small board
@@ -39,16 +39,15 @@ hasBlackPiece([_|Rest]):-
 valid_moves(Board, Player, LastMove, ListOfMoves):-
     nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     TotalSize is BoardSize*2,
-    %findall(Yi/Xi, getAllPieces(Board, Player, TotalSize, Yi/Xi), ListOfMoves),
-    findall([[Yi/Xi, Yf/Xf], PiecePushed], getAllMoves(Board, TotalSize, Player, LastMove, Yi/Xi, Yf/Xf, PiecePushed), ListOfMoves),
-    printList(ListOfMoves).
+    findall([[Yi/Xi, Yf/Xf], PiecePushed], getAllMoves(Board, TotalSize, Player, LastMove, Yi/Xi, Yf/Xf, PiecePushed), ListOfMoves).
+    %printList(ListOfMoves).
 
 valid_moves(Board, Player, ListOfMoves) :-
     nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     TotalSize is BoardSize*2,
     %findall(Yi/Xi, getAllPieces(Board, Player, TotalSize, Yi/Xi), ListOfMoves),
-    findall([Yi/Xi, Yf/Xf], getAllMoves(Board, TotalSize, Player, Yi/Xi, Yf/Xf), ListOfMoves),
-    printList(ListOfMoves).
+    findall([Yi/Xi, Yf/Xf], getAllMoves(Board, TotalSize, Player, Yi/Xi, Yf/Xf), ListOfMoves).
+    %printList(ListOfMoves).
 
 %DEBUG For printing a list
 printList([]).
