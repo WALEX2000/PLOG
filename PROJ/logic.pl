@@ -1,5 +1,38 @@
 :-use_module(library(lists)).
 
+%Checks if game is over
+gameOver(Board):-
+    nth0(0, Board, SmallBoardPair1),
+    nth0(0, SmallBoardPair1, SmallBoard1),
+    nth0(1, SmallBoardPair1, SmallBoard2),
+    nth0(1, Board, SmallBoardPair2),
+    nth0(0, SmallBoardPair2, SmallBoard3),
+    nth0(1, SmallBoardPair2, SmallBoard4),
+    (\+existsBothPieceTypes(SmallBoard1);
+    \+existsBothPieceTypes(SmallBoard2);
+    \+existsBothPieceTypes(SmallBoard3);
+    \+existsBothPieceTypes(SmallBoard4)).
+
+%Checks if both white and black piece types exist in small board
+existsBothPieceTypes(SmallBoard) :-
+    %hasBlackPiece(SmallBoard),
+    hasWhitePiece(SmallBoard).
+
+%Checks if white piece types exist in small board
+hasWhitePiece([w|_]).
+hasWhitePiece([SmallBoardLine|_]):-
+    hasWhitePiece(SmallBoardLine).
+hasWhitePiece([_|Rest]):-
+    hasWhitePiece(Rest).
+
+%Checks if white piece types exist in small board
+hasBlackPiece([b|_]).
+hasBlackPiece([SmallBoardLine|_]):-
+    hasBlackPiece(SmallBoardLine).
+hasBlackPiece([_|Rest]):-
+    hasBlackPiece(Rest).
+
+
 %Player: w|1, w|2, b|1, b|2 (White or Black, 1º ou 2º jogada)
 valid_moves(Board, Player, ListOfMoves) :-
     nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
@@ -28,7 +61,7 @@ getMove1Piece(TotalSize, PieceType, Board, Yi/Xi):-
     nth0(By, Board, BP), nth0(Bx, BP, SmallBoard),
     checkIfPieceExists(SmallBoard, PieceType, Row/Col).    
 
-%TODO Also needs to check if on the play after he's able to execute this move
+%TODO Also needs to check if on the play after he´s able to execute this move
 %Yf/Xf will be returned in general coordinates
 checkMove1Destination(Board, Yi/Xi, Yf/Xf):-
     %Forward
@@ -122,8 +155,8 @@ setTile(InBoard, OutBoard, GeneralLine, GeneralCol, Symbol, PastSymbol) :-
 generalToBoardCoords(InGeneralLine, InGeneralCol, InBoard, OutBoardLine, OutBoardCol, OutBoardX, OutBoardY):-
     nth0(0, InBoard, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     ((InGeneralLine @>= BoardSize,
-        (NewLine is InGeneralLine - BoardSize, OutBoardLine = NewLine, OutBoardY = 1));
-        (InGeneralLine @< BoardSize, OutBoardLine = InGeneralLine, OutBoardY = 0)),
+        (NewLine is InGeneralLine - BoardSize, OutBoardLine = NewLine, OutBoardX = 1));
+        (InGeneralLine @< BoardSize, OutBoardLine = InGeneralLine, OutBoardX = 0)),
     ((InGeneralCol @>= BoardSize,
-        (NewCol is InGeneralCol - BoardSize, OutBoardCol = NewCol, OutBoardX = 1));
-        (InGeneralCol @< BoardSize, OutBoardCol = InGeneralCol, OutBoardX = 0)).
+        (NewCol is InGeneralCol - BoardSize, OutBoardCol = NewCol, OutBoardY = 1));
+        (InGeneralCol @< BoardSize, OutBoardCol = InGeneralCol, OutBoardY = 0)).

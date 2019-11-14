@@ -123,11 +123,11 @@ printfColID(Id, BoardSize):-
     printfColID(Id1, BoardSize).
 
 printColumnIDs(BoardSize) :-
-    write('   '), Temp is BoardSize - 1,
-    printfColID(0, Temp),
+    write('   '),
+    printfColID(1, BoardSize),
     write('      '), 
-    BoardLimit is BoardSize*2 - 1,
-    ScndHalf is BoardSize,
+    BoardLimit is BoardSize*2,
+    ScndHalf is BoardSize+1,
     % print second half now
     printfColID(ScndHalf, BoardLimit),
     write('\n').
