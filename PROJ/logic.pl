@@ -108,13 +108,20 @@ moveRange(Ydiff, Xdiff, Range):-
     Ydiff is - Xdiff,
     abs(Ydiff, Range).
 
+localToGlobalCoords(Bx, By, BoardSize, Yl/Xl, Yg/Xg):-
+    Yg is Yl + BoardSize*By,
+    Xg is Xl + BoardSize*Bx.
+
 %Either Yf/Xf is empty and PiecePushed is [Yi/Xi, Yf/Xf] OR
 %Yf/Xf is out of board and PiecePushed is [Yi/Xi]
-checkIfCanPushPiece(Yi/Xi, Yf/Xf, SmallBoard, PiecePushed):-
-    (outOfRange(SmallBoard, Yf/Xf), PiecePushed = [Yi/Xi]);
-    (checkIfPieceExists(SmallBoard, e, Yf/Xf), PiecePushed = [Yi/Xi, Yf/Xf]).
+checkIfCanPushPiece(Yi/Xi, Yf/Xf, SmallBoard, Bx, By, PiecePushed):-
+    SmallBoard = [Row|_], length(Row, Length),
+    localToGlobalCoords(Bx, By, Length, Yi/Xi, Yig/Xig),
+    localToGlobalCoords(Bx, By, Length, Yf/Xf, Yfg/Xfg),
+    ((outOfRange(SmallBoard, Yf/Xf), PiecePushed = [Yig/Xig]);
+    (checkIfPieceExists(SmallBoard, e, Yf/Xf), PiecePushed = [Yig/Xig, Yfg/Xfg])).
 
-checkIfPathIsValid(Yi/Xi, Yf/Xf, SmallBoard, PieceType, PiecePushed):-
+checkIfPathIsValid(Yi/Xi, Yf/Xf, SmallBoard, PieceType, Bx, By, PiecePushed):-
     %Yi/Xi = 2/1, trace,
     ((PieceType = w, EnemyPiece = b); (PieceType = b, EnemyPiece = w)),
     Ydiff is Yf - Yi, Xdiff is Xf - Xi,
@@ -123,7 +130,7 @@ checkIfPathIsValid(Yi/Xi, Yf/Xf, SmallBoard, PieceType, PiecePushed):-
      ((checkIfPieceExists(SmallBoard, e, Yf/Xf), PiecePushed = []); %If it's empty it's all good
      (checkIfPieceExists(SmallBoard, EnemyPiece, Yf/Xf),
       NextY is Yf + Ydiff, NextX is Xf + Xdiff,
-      checkIfCanPushPiece(Yf/Xf, NextY/NextX, SmallBoard, PiecePushed))));
+      checkIfCanPushPiece(Yf/Xf, NextY/NextX, SmallBoard, Bx, By, PiecePushed))));
     %In case movement has 2 pos in length
     (moveRange(Ydiff, Xdiff, 2),
      IntY is Yi + Ydiff/2, IntX is Xi + Xdiff/2,
@@ -133,11 +140,11 @@ checkIfPathIsValid(Yi/Xi, Yf/Xf, SmallBoard, PieceType, PiecePushed):-
       checkIfPieceExists(SmallBoard, PieceFound, Yf/Xf),
       ((PieceFound = e, PiecePushed = []);
        (PieceFound = EnemyPiece,
-        checkIfCanPushPiece(Yf/Xf, LastY/LastX, SmallBoard, PiecePushed))));
+        checkIfCanPushPiece(Yf/Xf, LastY/LastX, SmallBoard, Bx, By, PiecePushed))));
      %In case first position isn't empty
      (checkIfPieceExists(SmallBoard, EnemyPiece, IntY/IntX),
       checkIfPieceExists(SmallBoard, e, Yf/Xf),
-      checkIfCanPushPiece(IntY/IntX, LastY/LastX, SmallBoard, PiecePushed))))).
+      checkIfCanPushPiece(IntY/IntX, LastY/LastX, SmallBoard, Bx, By, PiecePushed))))).
 
 checkMove2Destination(Board, LastMove, Yi/Xi, Yf/Xf, PieceType, PiecePushed):-
     %Difference between Yi/Xi and Yf/Xf needs to be the same as in LastMove
@@ -147,7 +154,7 @@ checkMove2Destination(Board, LastMove, Yi/Xi, Yf/Xf, PieceType, PiecePushed):-
     generalToBoardCoords(Yi, Xi, Board, Rowi, Coli, Bx, By),
     generalToBoardCoords(Yf, Xf, Board, Rowf, Colf, Bx, By),
     nth0(By, Board, BP), nth0(Bx, BP, SmallBoard),
-    checkIfPathIsValid(Rowi/Coli, Rowf/Colf, SmallBoard, PieceType, PiecePushed).
+    checkIfPathIsValid(Rowi/Coli, Rowf/Colf, SmallBoard, PieceType, Bx, By, PiecePushed).
     %If enemy piece is push out of the board then PiecePushed will be [EYi/EXi] else  [EYi/EXi, EYf/EXf]
 
 %Acceptance function for moves a player can execute in the second turn

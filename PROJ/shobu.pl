@@ -37,8 +37,8 @@ initialBoard([
 intermediateBoard([
                 [
                     [ 
-                        [e, b, b, b],
-                        [e, b, e, e],
+                        [e, b, e, b],
+                        [e, b, b, e],
                         [w, e, e, e],
                         [w, w, w, e]
                     ],
@@ -155,4 +155,4 @@ testValidPos2(Moves):-
     %createBoard(4, Board),
     intermediateBoard(Board), 
     display_game(Board, 1),
-    valid_moves(Board, w|2, [7/0, 5/2], Moves), notrace.
+    valid_moves(Board, w|2, [7/6, 6/7], Moves), notrace.
