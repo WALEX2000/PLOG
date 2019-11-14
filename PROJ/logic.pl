@@ -1,6 +1,15 @@
 :-use_module(library(lists)).
 
 %Player: w|1, w|2, b|1, b|2 (White or Black, 1º ou 2º jogada)
+%LastMove comes in the following format [Yi/Xi, Yf/Xf]
+%ListOfMoves comes in the following format [[Yi/Xi, Yf/Xf],[Yi/Xi, Yf/Xf]]; o movimento pode estar vazio e corresponde a uma peça enimiga empurrada
+valid_moves(Board, Player, LastMove, ListOfMoves):-
+    nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
+    TotalSize is BoardSize*2,
+    %findall(Yi/Xi, getAllPieces(Board, Player, TotalSize, Yi/Xi), ListOfMoves),
+    findall([[Yi/Xi, Yf/Xf], PiecePushed], getAllMoves(Board, TotalSize, Player, LastMove, Yi/Xi, Yf/Xf, PiecePushed), ListOfMoves),
+    printList(ListOfMoves).
+
 valid_moves(Board, Player, ListOfMoves) :-
     nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     TotalSize is BoardSize*2,
@@ -17,16 +26,7 @@ printList([Head|Rest]):-
 insideBoard(TotalSize, Y/X):-
     LastPos is TotalSize - 1,
     numlist(0, LastPos, L),
-    member(Y, L), member(X, L).
-
-%TODO add -SmallBoard -Row/Col
-getMove1Piece(TotalSize, PieceType, Board, Yi/Xi):-
-    HalfSize is TotalSize/2,
-    ((PieceType = w, Yi @>= HalfSize);
-     (PieceType = b, Yi @< HalfSize)),
-    generalToBoardCoords(Yi, Xi, Board, Row, Col, Bx, By),
-    nth0(By, Board, BP), nth0(Bx, BP, SmallBoard),
-    checkIfPieceExists(SmallBoard, PieceType, Row/Col).    
+    member(Y, L), member(X, L).   
 
 %TODO Also needs to check if on the play after he's able to execute this move
 %Yf/Xf will be returned in general coordinates
@@ -66,15 +66,106 @@ checkEmptyPosition(Board, Yf/Xf, Yi/Xi):-
     nth0(By, Board, BP), nth0(Bx, BP, SmallBoard),
     checkIfPieceExists(SmallBoard, e, Row/Col).
 
+checkIfPieceExists(SmallBoard, PieceType, Row/Col):-
+    nth0(Row, SmallBoard, List), nth0(Col, List, Piece),
+    Piece = PieceType.
+
+%Checks if Yi/Xi position is valid for the first move
+getMove1Piece(TotalSize, PieceType, Board, Yi/Xi):-
+    HalfSize is TotalSize/2,
+    ((PieceType = w, Yi @>= HalfSize);
+     (PieceType = b, Yi @< HalfSize)),
+    generalToBoardCoords(Yi, Xi, Board, Row, Col, Bx, By),
+    nth0(By, Board, BP), nth0(Bx, BP, SmallBoard),
+    checkIfPieceExists(SmallBoard, PieceType, Row/Col). 
+
+%Checks if Yi/Xi position is valid for the second move
+getMove2Piece(Board, Yi/Xi, PieceType, LastMove):-
+    %Determine which boards Yi/Xi can be in, depending on LastMove
+    LastMove = [LYi/LXi|_],
+    %Get LastMove Board X coord and check if Yi/Xi is a valid piece
+    generalToBoardCoords(LYi, LXi, Board, _, _, LBx, _),
+    ((LBx = 0, Bx = 1, generalToBoardCoords(Yi, Xi, Board, Row, Col, Bx, By));
+    (LBx = 1, Bx = 0, generalToBoardCoords(Yi, Xi, Board, Row, Col, Bx, By))),
+    nth0(By, Board, BP), nth0(Bx, BP, SmallBoard),
+    checkIfPieceExists(SmallBoard, PieceType, Row/Col).
+
+outOfRange(SmallBoard, Y/X):-
+    length(SmallBoard, Length), L is Length - 1,
+    (\+between(0, L, X); \+between(0, L, Y)).
+    
+moveRange(Ydiff, 0, Range):-
+    abs(Ydiff, Range).
+
+moveRange(0, Xdiff, Range):-
+    abs(Xdiff, Range).
+
+moveRange(Ydiff, Ydiff, Range):-
+    abs(Ydiff, Range).
+
+moveRange(Ydiff, Xdiff, Range):-
+    Ydiff is - Xdiff,
+    abs(Ydiff, Range).
+
+%Either Yf/Xf is empty and PiecePushed is [Yi/Xi, Yf/Xf] OR
+%Yf/Xf is out of board and PiecePushed is [Yi/Xi]
+checkIfCanPushPiece(Yi/Xi, Yf/Xf, SmallBoard, PiecePushed):-
+    (outOfRange(SmallBoard, Yf/Xf), PiecePushed = [Yi/Xi]);
+    (checkIfPieceExists(SmallBoard, e, Yf/Xf), PiecePushed = [Yi/Xi, Yf/Xf]).
+
+checkIfPathIsValid(Yi/Xi, Yf/Xf, SmallBoard, PieceType, PiecePushed):-
+    %Yi/Xi = 1/1, trace,
+    ((PieceType = w, EnemyPiece = b); (PieceType = b, EnemyPiece = w)),
+    Ydiff is Yf - Yi, Xdiff is Xf - Xi,
+    %In case movement has only 1 pos in length
+    ((moveRange(Ydiff, Xdiff, 1),
+     (checkIfPieceExists(SmallBoard, e, Yf/Xf), PiecePushed = []); %If it's empty it's all good
+     (checkIfPieceExists(SmallBoard, EnemyPiece, Yf/Xf),
+      NextY is Yf + Ydiff, NextX is Xf + Xdiff,
+      checkIfCanPushPiece(Yf/Xf, NextY/NextX, SmallBoard, PiecePushed)));
+    %In case movement has 2 pos in length
+    (moveRange(Ydiff, Xdiff, 2),
+     IntY is Yi + Ydiff/2, IntX is Xi + Xdiff/2,
+     LastY is Yf + Ydiff/2, LastX is Xf + Xdiff/2, 
+     %In case first position is empty
+     ((checkIfPieceExists(SmallBoard, e, IntY/IntX),
+      checkIfPieceExists(SmallBoard, PieceFound, Yf/Xf),
+      ((PieceFound = e, PiecePushed = []);
+       (PieceFound = EnemyPiece,
+        checkIfCanPushPiece(Yf/Xf, LastY/LastX, SmallBoard, PiecePushed))));
+     %In case first position isn't empty
+     (checkIfPieceExists(SmallBoard, EnemyPiece, IntY/IntX),
+      checkIfPieceExists(SmallBoard, e, Yf/Xf),
+      checkIfCanPushPiece(IntY/IntX, LastY/LastX, SmallBoard, PiecePushed))))).
+
+checkMove2Destination(Board, LastMove, Yi/Xi, Yf/Xf, PieceType, PiecePushed):-
+    %Difference between Yi/Xi and Yf/Xf needs to be the same as in LastMove
+    LastMove = [LYi/LXi|[LYf/LXf]],
+    Yf is Yi + (LYf - LYi), Xf is Xi + (LXf - LXi),
+    %Yf/Xf need to be inside the same board boundaries as Yi/Xi
+    generalToBoardCoords(Yi, Xi, Board, Rowi, Coli, Bx, By),
+    generalToBoardCoords(Yf, Xf, Board, Rowf, Colf, Bx, By),
+    nth0(By, Board, BP), nth0(Bx, BP, SmallBoard),
+    checkIfPathIsValid(Rowi/Coli, Rowf/Colf, SmallBoard, PieceType, PiecePushed).
+    %If enemy piece is push out of the board then PiecePushed will be [EYi/EXi] else  [EYi/EXi, EYf/EXf]
+
+%Acceptance function for moves a player can execute in the second turn
+getAllMoves(Board, TotalSize, PieceType|2, LastMove, Yi/Xi, Yf/Xf, PiecePushed) :-
+    insideBoard(TotalSize, Yi/Xi),
+    getMove2Piece(Board, Yi/Xi, PieceType, LastMove),
+    checkMove2Destination(Board, LastMove, Yi/Xi, Yf/Xf, PieceType, PiecePushed).
+
+
+%Acceptance function for moves a player can execute in the first turn
+getAllMoves(Board, TotalSize, PieceType|1, Yi/Xi, Yf/Xf) :-
+    insideBoard(TotalSize, Yi/Xi),
+    (getMove1Piece(TotalSize, PieceType, Board, Yi/Xi), checkMove1Destination(Board, Yi/Xi, Yf/Xf)).
+
+%DEBUG ONLY
 %Gets all the pieces a certain player can Play on this move
 getAllPieces(Board, PieceType|Move, TotalSize, Yi/Xi):-
     insideBoard(TotalSize, Yi/Xi),
     (Move = 1, getMove1Piece(TotalSize, PieceType, Board, Yi/Xi)).
-
-%Gets all moves a certain player can play on this Move
-getAllMoves(Board, TotalSize, PieceType|Move, Yi/Xi, Yf/Xf) :-
-    insideBoard(TotalSize, Yi/Xi),
-    (Move = 1, getMove1Piece(TotalSize, PieceType, Board, Yi/Xi), checkMove1Destination(Board, Yi/Xi, Yf/Xf)).
 
 %Passar lista de Peças (Posições) que se pode mexer
 %Cada peça pode mexer 1 ou 2 casa em cada direção desde que esteja dentro do board (> 0 && < boardSize)
@@ -86,20 +177,6 @@ getAllMoves(Board, TotalSize, PieceType|Move, Yi/Xi, Yf/Xf) :-
 %Needs to have full board in order to check if there'll be any valid moves after this play is made
 %Needs to have a board pair consisting only of the current 2 smallBoards that the player can move pieces in
 %Next, depending on the current move get a differente board Pair (1st move, just get 1st or 2nd pos| 2nd move needs to build the board depending on the 1st move)
-
-valid_move(Board, PieceType|_, Xi/Yi, Xf/Yf) :-
-    %First determine size of board
-    %Determinar se Xi/Yi corresponde a uma peça do jogador correto no taubleiro
-    generalToBoardCoords(Yi, Xi, Board, Rowi, Coli, BoardX, BoardY),
-    nth0(BoardY, Board, BP), nth0(BoardX, BP, SmallBoard),
-    %Para já apenas fazer 1º jogada
-    checkIfPieceExists(SmallBoard, PieceType, Rowi/Coli),
-    Xf = Coli, Yf = Rowi. 
-
-checkIfPieceExists(SmallBoard, PieceType, Row/Col):-
-    nth0(Row, SmallBoard, List), nth0(Col, List, Piece),
-    %write('Found Piece: '), write(Piece), write(' at: '), write(Row/Col), write('in: '), write(SmallBoard), nl,
-    Piece = PieceType.
 
 move(InBoard, OutBoard, OrigLine, OrigCol, DestLine, DestCol) :-
     setTile(InBoard, TempBoard, OrigLine, OrigCol, 'e', PastSymbol),
