@@ -1,106 +1,35 @@
 :-use_module(library(lists)).
+:-consult('boards.pl').
 :-consult('display.pl').
 :-consult('logic.pl').
 :-consult('input.pl').
 
-initialBoard([
-                [
-                    [ 
-                        [b, b, b, b],
-                        [e, e, e, e],
-                        [e, e, e, e],
-                        [w, w, w, w]
-                    ],
-                    [
-                        [b, b, b, b],
-                        [e, e, e, e],
-                        [e, e, e, e],
-                        [w, w, w, w]
-                    ]
-                ],
-                [
-                    [
-                        [b, b, b, b],
-                        [e, e, e, e],
-                        [e, e, e, e],
-                        [w, w, w, w]
-                    ],
-                    [
-                        [b, b, b, b],
-                        [e, e, e, e],
-                        [e, e, e, e],
-                        [w, w, w, w]
-                    ]
-                ]
-            ]).
-
-intermediateBoard([
-                [
-                    [ 
-                        [e, b, e, b],
-                        [e, b, b, e],
-                        [w, e, e, e],
-                        [w, w, w, e]
-                    ],
-                    [
-                        [b, e, e, b],
-                        [e, e, b, b],
-                        [e, e, e, e],
-                        [w, w, w, e]
-                    ]
-                ],
-                [
-                    [
-                        [e, b, b, b],
-                        [w, e, e, e],
-                        [e, e, e, e],
-                        [w, w, e, w]
-                    ],
-                    [
-                        [b, b, b, b],
-                        [e, e, e, e],
-                        [e, w, e, e],
-                        [w, e, w, w]
-                    ]
-                ]
-            ]).
-
-endBoard([
-                [
-                    [ 
-                        [e, b, e, b],
-                        [e, e, b, b],
-                        [e, w, e, e],
-                        [w, w, w, e]
-                    ],
-                    [
-                        [b, e, e, b],
-                        [e, e, e, b],
-                        [e, e, e, e],
-                        [e, e, e, b]
-                    ]
-                ],
-                [
-                    [
-                        [e, w, b, b],
-                        [e, e, e, e],
-                        [e, e, e, w],
-                        [w, e, e, e]
-                    ],
-                    [
-                        [b, b, b, b],
-                        [w, e, e, e],
-                        [e, w, e, e],
-                        [e, e, w, w]
-                    ]
-                ]
-            ]).
-    
-
 play() :-
     initialBoard(Board),
-    display_game(Board, 1),
-    valid_moves(Board, 1, _).
+    playHvsH(Board).
+
+playHvsH(InitBoard) :-
+    gameOver(InitBoard);
+    display_game(InitBoard, 1),
+    repeat,
+    write("Origin (eg: A1):"),
+    readPlay(OrigLine1, OrigCol1, 4),
+    !,
+    repeat,
+    write("Destination (eg: A1):"),
+    readPlay(DestLine1, DestCol1, 4),
+    !,
+    move(InitBoard, MidBoard, OrigLine1, OrigCol1, DestLine1, DestCol1),!,
+    (gameOver(MidBoard);
+    display_game(MidBoard, 2),
+    repeat,
+    write("Origin (eg: A1):"),
+    readPlay(OrigLine2, OrigCol2, 4),
+    repeat,
+    write("Destination (eg: A1):"),
+    readPlay(DestLine2, DestCol2, 4),
+    move(MidBoard, FinalBoard, OrigLine2, OrigCol2, DestLine2, DestCol2),!,
+    playHvsH(FinalBoard)).
 
 test() :-
     initialBoard(Board1),
@@ -109,41 +38,6 @@ test() :-
     display_game(Board2, 1),!,
     move(Board2, Board3, 7, 7, 6, 7),
     display_game(Board3, 2),!.
-
-test2() :-
-    readPlay(Line, Col, 3),
-    write(Line),
-    write('\n'),
-    write(Col).
-
-%Functions to create a board with variable size
-
-createList(0, _, []).
-createList(Size, Char, [Char|Rest]):-
-    N is Size - 1,
-    createList(N, Char, Rest).
-
-fillSmallBoard(B, Size, Size):-
-    createList(Size, 'b', Blist),
-    B = [Blist|Rest], N is Size - 1,
-    fillSmallBoard(Rest, Size, N).
-
-fillSmallBoard([Elem], Size, 1):-
-    createList(Size, 'w', Wlist),
-    Elem = Wlist.
-
-fillSmallBoard([Elem|Rest], Size, N):-
-    createList(Size, 'e', Elist),
-    Elem = Elist, N1 is N - 1,
-    fillSmallBoard(Rest, Size, N1).
-
-createSmallBoard(B, Size):-
-    fillSmallBoard(B, Size, Size).
-
-createBoard(Size, Board):-
-    createSmallBoard(B, Size),
-    Board = [[B,B],[B,B]],
-    display_game(Board, 1).
 
 testValidPos(Moves):-
     %createBoard(4, Board),
