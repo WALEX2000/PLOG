@@ -150,7 +150,6 @@ printBoardsSeparator(BoardSize) :-
 % É Preciso ir buscar o tamanho de cada tabuleiro invidual a partir disto
 % para isso tenho de ir ao primeiro elem de BP1 (Primeiro board) e dps ir ao primeiro elemento desse (primeira linha) e contar no numero de elementos presentes.
 printBoard([BP1|[BP2|_]]) :-
-    write('\e[H\e[2J'),
     nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     %Print the board´s column numbers
     printColumnIDs(BoardSize),
@@ -164,6 +163,7 @@ printBoard([BP1|[BP2|_]]) :-
     nl, printColumnIDs(BoardSize).
 
 printBoard(Board, Winner) :-
+    write('\e[H\e[2J'),
     printBoard(Board),
     write("AND THE WINNER ISSSSSS, PLAYER "),
     write(Winner),
@@ -171,7 +171,7 @@ printBoard(Board, Winner) :-
 
 % Need to identify which move we are in as well and highlight accordingly
 display_game(Board, Player, Move) :-
-    nl,
+    write('\e[H\e[2J'),
     write('Player '),
     write(Player),
     write(' playing (Move '),

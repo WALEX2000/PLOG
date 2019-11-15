@@ -1,17 +1,29 @@
 :-use_module(library(lists)).
 
 %Checks if game is over
-gameOver(Board):-
+gameOver(Board, Winner):-
     nth0(0, Board, SmallBoardPair1),
     nth0(0, SmallBoardPair1, SmallBoard1),
     nth0(1, SmallBoardPair1, SmallBoard2),
     nth0(1, Board, SmallBoardPair2),
     nth0(0, SmallBoardPair2, SmallBoard3),
     nth0(1, SmallBoardPair2, SmallBoard4),
-    (\+existsBothPieceTypes(SmallBoard1);
-    \+existsBothPieceTypes(SmallBoard2);
-    \+existsBothPieceTypes(SmallBoard3);
-    \+existsBothPieceTypes(SmallBoard4)).
+    (
+        \+existsBothPieceTypes(SmallBoard1);
+        \+existsBothPieceTypes(SmallBoard2);
+        \+existsBothPieceTypes(SmallBoard3);
+        \+existsBothPieceTypes(SmallBoard4)
+    ),
+    (
+        (\+hasBlackPiece(SmallBoard1),hasWhitePiece(SmallBoard1),Winner=1);
+        (hasBlackPiece(SmallBoard1),\+hasWhitePiece(SmallBoard1),Winner=2);
+        (\+hasBlackPiece(SmallBoard2),hasWhitePiece(SmallBoard2),Winner=1);
+        (hasBlackPiece(SmallBoard2),\+hasWhitePiece(SmallBoard2),Winner=2);
+        (\+hasBlackPiece(SmallBoard3),hasWhitePiece(SmallBoard3),Winner=1);
+        (hasBlackPiece(SmallBoard3),\+hasWhitePiece(SmallBoard3),Winner=2);
+        (\+hasBlackPiece(SmallBoard4),hasWhitePiece(SmallBoard4),Winner=1);
+        (hasBlackPiece(SmallBoard4),\+hasWhitePiece(SmallBoard4),Winner=2)
+    ).
 
 %Checks if both white and black piece types exist in small board
 existsBothPieceTypes(SmallBoard) :-
@@ -37,7 +49,7 @@ pushPiece(InBoard, InBoard, []).
 pushPiece(InBoard, OutBoard, [OrigLine/OrigCol]):-
     setTile(InBoard, OutBoard, OrigLine, OrigCol, 'e', _).
 pushPiece(InBoard, OutBoard, [OrigLine/OrigCol,DestLine/DestCol]):-
-    move(InBoard, OutBoard, OrigLine, OrigCol, DestLine, DestCol).
+    move([OrigLine/OrigCol, DestLine/DestCol], InBoard, OutBoard).
 
 
 %Player: w|1, w|2, b|1, b|2 (White or Black, 1º ou 2º jogada)
@@ -46,13 +58,12 @@ pushPiece(InBoard, OutBoard, [OrigLine/OrigCol,DestLine/DestCol]):-
 valid_moves(Board, Player, LastMove, ListOfMoves):-
     nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     TotalSize is BoardSize*2,
-    findall([[Yi/Xi, Yf/Xf], PiecePushed], getAllMoves(Board, TotalSize, Player, LastMove, Yi/Xi, Yf/Xf, PiecePushed), ListOfMoves),
-    printList(ListOfMoves).
+    findall([[Yi/Xi, Yf/Xf], PiecePushed], getAllMoves(Board, TotalSize, Player, LastMove, Yi/Xi, Yf/Xf, PiecePushed), ListOfMoves).
+    %printList(ListOfMoves).
 
 valid_moves(Board, Player, ListOfMoves) :-
     nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     TotalSize is BoardSize*2,
-    %findall(Yi/Xi, getAllPieces(Board, Player, TotalSize, Yi/Xi), ListOfMoves),
     findall([Yi/Xi, Yf/Xf], getAllMoves(Board, TotalSize, Player, Yi/Xi, Yf/Xf), ListOfMoves).
     %printList(ListOfMoves).
 
@@ -206,7 +217,9 @@ getAllMoves(Board, TotalSize, PieceType|2, LastMove, Yi/Xi, Yf/Xf, PiecePushed) 
 %Acceptance function for moves a player can execute in the first turn
 getAllMoves(Board, TotalSize, PieceType|1, Yi/Xi, Yf/Xf) :-
     insideBoard(TotalSize, Yi/Xi),
-    (getMove1Piece(TotalSize, PieceType, Board, Yi/Xi), checkMove1Destination(Board, Yi/Xi, Yf/Xf)).
+    (getMove1Piece(TotalSize, PieceType, Board, Yi/Xi), checkMove1Destination(Board, Yi/Xi, Yf/Xf)),
+    move([Yi/Xi, Yf/Xf],Board, TempBoard), valid_moves(TempBoard, PieceType|2, [Yi/Xi, Yf/Xf], ListOfMoves),
+    \+ListOfMoves = [].
 
 %DEBUG ONLY
 %Gets all the pieces a certain player can Play on this move
@@ -225,7 +238,7 @@ getAllPieces(Board, PieceType|Move, TotalSize, Yi/Xi):-
 %Needs to have a board pair consisting only of the current 2 smallBoards that the player can move pieces in
 %Next, depending on the current move get a differente board Pair (1st move, just get 1st or 2nd pos| 2nd move needs to build the board depending on the 1st move)
 
-move(InBoard, OutBoard, OrigLine, OrigCol, DestLine, DestCol) :-
+move([OrigLine/OrigCol, DestLine/DestCol], InBoard, OutBoard) :-
     setTile(InBoard, TempBoard, OrigLine, OrigCol, 'e', PastSymbol),
     setTile(TempBoard, OutBoard, DestLine, DestCol, PastSymbol, _).
 
@@ -259,4 +272,10 @@ choose_move(Board, 0, PieceType|1, Move):-
     length(ListOfMoves, Size),
     Last is Size-1,
     X is random(Last),
+    nth0(X, ListOfMoves, Move).
+
+choose_move(Board, 0, PieceType|2, LastMove, Move):-
+    valid_moves(Board, PieceType|2, LastMove, ListOfMoves),
+    length(ListOfMoves, Size),
+    X is random(Size),
     nth0(X, ListOfMoves, Move).
