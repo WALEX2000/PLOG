@@ -5,12 +5,12 @@
 :-consult('input.pl').
 
 play() :-
-    initialBoard(Board),
+    endBoard(Board),
     playHvsH(Board).
 
 playHvsH(InitBoard) :-
     %%CHECK GAME OVER
-    gameOver(InitBoard);
+    gameOver(InitBoard, Winner), write("AND THE WINNER ISSSSSS, PLAYER "), write(Winner), write("\n");
     write('\e[H\e[2J'),
 
     %%PLAYER 1 FIRST MOVE%%
@@ -18,7 +18,7 @@ playHvsH(InitBoard) :-
     valid_moves(InitBoard, b|1, Player1FirstMoves),
     repeat,
     getPlayerMove(OrigLineP1M1, OrigColP1M1, DestLineP1M1, DestColP1M1, Player1FirstMoves, _),
-    move(InitBoard, BoardPostP1First, OrigLineP1M1, OrigColP1M1, DestLineP1M1, DestColP1M1),!,
+    move(InitBoard, BoardPostP1First, OrigLineP1M1, OrigColP1M1, DestLineP1M1, DestColP1M1),!,  
     write('\e[H\e[2J'),
 
     %%PLAYER 1 SECOND MOVE%%
@@ -30,7 +30,7 @@ playHvsH(InitBoard) :-
     move(BoardPostP1Push, BoardPostP1Second, OrigLineP1M2, OrigColP1M2, DestLineP1M2, DestColP1M2),!,
 
     %%CHECK GAME OVER
-    ((gameOver(BoardPostP1Second), printBoard(BoardPostP1Second));
+    (gameOver(BoardPostP1Second, Winner), write("AND THE WINNER ISSSSSS, PLAYER "), write(Winner), write("\n");
     write('\e[H\e[2J'),
 
     %%PLAYER 2 FIRST MOVE%%

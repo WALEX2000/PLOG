@@ -1,22 +1,32 @@
 :-use_module(library(lists)).
 
 %Checks if game is over
-gameOver(Board):-
+gameOver(Board, Winner):-
     nth0(0, Board, SmallBoardPair1),
     nth0(0, SmallBoardPair1, SmallBoard1),
     nth0(1, SmallBoardPair1, SmallBoard2),
     nth0(1, Board, SmallBoardPair2),
     nth0(0, SmallBoardPair2, SmallBoard3),
     nth0(1, SmallBoardPair2, SmallBoard4),
-    (\+existsBothPieceTypes(SmallBoard1);
-    \+existsBothPieceTypes(SmallBoard2);
-    \+existsBothPieceTypes(SmallBoard3);
-    \+existsBothPieceTypes(SmallBoard4)).
+    (\+existsBothPieceTypes(SmallBoard1, Winner);
+    \+existsBothPieceTypes(SmallBoard2, Winner);
+    \+existsBothPieceTypes(SmallBoard3, Winner);
+    \+existsBothPieceTypes(SmallBoard4, Winner)).
 
 %Checks if both white and black piece types exist in small board
-existsBothPieceTypes(SmallBoard) :-
+existsBothPieceTypes(SmallBoard, _) :-
     hasBlackPiece(SmallBoard),
     hasWhitePiece(SmallBoard).
+
+existsBothPieceTypes(SmallBoard, Winner) :-
+    hasBlackPiece(SmallBoard),
+    Winner = 1,
+    fail.
+
+existsBothPieceTypes(SmallBoard, Winner) :-
+    hasBlackPiece(SmallBoard),
+    Winner = 0,
+    fail.
 
 %Checks if white piece types exist in small board
 hasWhitePiece([w|_]).
