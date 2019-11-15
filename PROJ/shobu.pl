@@ -5,7 +5,7 @@
 :-consult('input.pl').
 
 play() :-
-    uwu(Board),
+    initialBoard(Board),
     playHvsH(Board).
 
 playHvsH(InitBoard) :-
@@ -30,7 +30,7 @@ playHvsH(InitBoard) :-
     move(BoardPostP1Push, BoardPostP1Second, OrigLineP1M2, OrigColP1M2, DestLineP1M2, DestColP1M2),!,
 
     %%CHECK GAME OVER
-    (gameOver(BoardPostP1Second);
+    ((gameOver(BoardPostP1Second), printBoard(BoardPostP1Second));
     write('\e[H\e[2J'),
 
     %%PLAYER 2 FIRST MOVE%%
