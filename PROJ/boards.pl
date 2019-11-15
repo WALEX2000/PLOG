@@ -29,6 +29,37 @@ initialBoard([
                 ]
             ]).
 
+uwu([
+            [
+                [ 
+                    [b, e, b, b],
+                    [e, b, e, e],
+                    [e, e, e, e],
+                    [w, w, w, w]
+                ],
+                [
+                    [b, b, b, b],
+                    [e, e, e, e],
+                    [e, e, e, e],
+                    [w, w, w, w]
+                ]
+            ],
+            [
+                [
+                    [b, b, b, b],
+                    [e, e, e, e],
+                    [e, e, e, e],
+                    [w, w, w, w]
+                ],
+                [
+                    [b, e, b, b],
+                    [e, e, e, e],
+                    [w, b, e, e],
+                    [w, e, w, w]
+                ]
+            ]
+        ]).
+
 intermediateBoard([
                 [
                     [ 

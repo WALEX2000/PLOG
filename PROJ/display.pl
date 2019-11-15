@@ -163,11 +163,13 @@ printBoard([BP1|[BP2|_]]) :-
     nl, printColumnIDs(BoardSize).
 
 % Need to identify which move we are in as well and highlight accordingly
-display_game(Board, Player) :-
+display_game(Board, Player, Move) :-
     nl,
     write('Player '),
     write(Player),
-    write(' playing:\n'),
+    write(' playing (Move '),
+    write(Move),
+    write('):\n'),
     nl,
     printBoard(Board).
 

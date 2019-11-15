@@ -32,6 +32,13 @@ hasBlackPiece([SmallBoardLine|_]):-
 hasBlackPiece([_|Rest]):-
     hasBlackPiece(Rest).
 
+%Moves a pushed piece in move 2
+pushPiece(InBoard, InBoard, []).
+pushPiece(InBoard, OutBoard, [OrigLine/OrigCol,[]]):-
+    setTile(InBoard, OutBoard, OrigLine, OrigCol, 'e', _).
+pushPiece(InBoard, OutBoard, [OrigLine/OrigCol,[DestLine/DestCol]]):-
+    move(InBoard, OutBoard, OrigLine, OrigCol, DestLine, DestCol).
+
 
 %Player: w|1, w|2, b|1, b|2 (White or Black, 1º ou 2º jogada)
 %LastMove comes in the following format [Yi/Xi, Yf/Xf]
