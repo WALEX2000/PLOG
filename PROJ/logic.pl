@@ -34,9 +34,9 @@ hasBlackPiece([_|Rest]):-
 
 %Moves a pushed piece in move 2
 pushPiece(InBoard, InBoard, []).
-pushPiece(InBoard, OutBoard, [OrigLine/OrigCol,[]]):-
+pushPiece(InBoard, OutBoard, [OrigLine/OrigCol]):-
     setTile(InBoard, OutBoard, OrigLine, OrigCol, 'e', _).
-pushPiece(InBoard, OutBoard, [OrigLine/OrigCol,[DestLine/DestCol]]):-
+pushPiece(InBoard, OutBoard, [OrigLine/OrigCol,DestLine/DestCol]):-
     move(InBoard, OutBoard, OrigLine, OrigCol, DestLine, DestCol).
 
 
@@ -46,8 +46,8 @@ pushPiece(InBoard, OutBoard, [OrigLine/OrigCol,[DestLine/DestCol]]):-
 valid_moves(Board, Player, LastMove, ListOfMoves):-
     nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     TotalSize is BoardSize*2,
-    findall([[Yi/Xi, Yf/Xf], PiecePushed], getAllMoves(Board, TotalSize, Player, LastMove, Yi/Xi, Yf/Xf, PiecePushed), ListOfMoves).
-    %printList(ListOfMoves).
+    findall([[Yi/Xi, Yf/Xf], PiecePushed], getAllMoves(Board, TotalSize, Player, LastMove, Yi/Xi, Yf/Xf, PiecePushed), ListOfMoves),
+    printList(ListOfMoves).
 
 valid_moves(Board, Player, ListOfMoves) :-
     nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),

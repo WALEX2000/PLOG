@@ -13,3 +13,14 @@ readCell(Line, Col, BoardSize):-
     Col is ColNum - 1,
     Col@>=0,
     Col@<RealSize.
+
+getPlayerMove(OrigLine, OrigCol, DestLine, DestCol, PlayerMoves, PiecePushed):-
+    write("Origin (eg: A1):"),
+    readCell(OrigLine, OrigCol, 4),
+    write("Destination (eg: A1):"),
+    readCell(DestLine, DestCol, 4),
+    (member([OrigLine/OrigCol,DestLine/DestCol], PlayerMoves);
+    member([[OrigLine/OrigCol,DestLine/DestCol], PiecePushed], PlayerMoves)).
+getPlayerMove(_, _, _, _, _, _):-
+    write("Invalid move.\n"),
+    fail.

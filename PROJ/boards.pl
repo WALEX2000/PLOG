@@ -54,7 +54,7 @@ uwu([
                 [
                     [b, e, b, b],
                     [e, e, e, e],
-                    [w, b, e, e],
+                    [e, w, b, e],
                     [w, e, w, w]
                 ]
             ]
