@@ -1,32 +1,22 @@
 :-use_module(library(lists)).
 
 %Checks if game is over
-gameOver(Board, Winner):-
+gameOver(Board):-
     nth0(0, Board, SmallBoardPair1),
     nth0(0, SmallBoardPair1, SmallBoard1),
     nth0(1, SmallBoardPair1, SmallBoard2),
     nth0(1, Board, SmallBoardPair2),
     nth0(0, SmallBoardPair2, SmallBoard3),
     nth0(1, SmallBoardPair2, SmallBoard4),
-    (\+existsBothPieceTypes(SmallBoard1, Winner);
-    \+existsBothPieceTypes(SmallBoard2, Winner);
-    \+existsBothPieceTypes(SmallBoard3, Winner);
-    \+existsBothPieceTypes(SmallBoard4, Winner)).
+    (\+existsBothPieceTypes(SmallBoard1);
+    \+existsBothPieceTypes(SmallBoard2);
+    \+existsBothPieceTypes(SmallBoard3);
+    \+existsBothPieceTypes(SmallBoard4)).
 
 %Checks if both white and black piece types exist in small board
-existsBothPieceTypes(SmallBoard, _) :-
+existsBothPieceTypes(SmallBoard) :-
     hasBlackPiece(SmallBoard),
     hasWhitePiece(SmallBoard).
-
-existsBothPieceTypes(SmallBoard, Winner) :-
-    hasBlackPiece(SmallBoard),
-    Winner = 1,
-    fail.
-
-existsBothPieceTypes(SmallBoard, Winner) :-
-    hasBlackPiece(SmallBoard),
-    Winner = 0,
-    fail.
 
 %Checks if white piece types exist in small board
 hasWhitePiece([w|_]).
@@ -56,8 +46,8 @@ pushPiece(InBoard, OutBoard, [OrigLine/OrigCol,DestLine/DestCol]):-
 valid_moves(Board, Player, LastMove, ListOfMoves):-
     nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     TotalSize is BoardSize*2,
-    findall([[Yi/Xi, Yf/Xf], PiecePushed], getAllMoves(Board, TotalSize, Player, LastMove, Yi/Xi, Yf/Xf, PiecePushed), ListOfMoves).
-    %printList(ListOfMoves).
+    findall([[Yi/Xi, Yf/Xf], PiecePushed], getAllMoves(Board, TotalSize, Player, LastMove, Yi/Xi, Yf/Xf, PiecePushed), ListOfMoves),
+    printList(ListOfMoves).
 
 valid_moves(Board, Player, ListOfMoves) :-
     nth0(0, Board, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
@@ -130,13 +120,12 @@ getMove1Piece(TotalSize, PieceType, Board, Yi/Xi):-
 
 %Checks if Yi/Xi position is valid for the second move
 getMove2Piece(Board, Yi/Xi, PieceType, LastMove):-
-    %Yi/Xi = 4/0, trace,
     %Determine which boards Yi/Xi can be in, depending on LastMove
     LastMove = [LYi/LXi|_],
     %Get LastMove Board X coord and check if Yi/Xi is a valid piece
     generalToBoardCoords(LYi, LXi, Board, _, _, LBx, _),
     ((LBx = 0, Bx = 1, generalToBoardCoords(Yi, Xi, Board, Row, Col, Bx, By));
-     (LBx = 1, Bx1 = 0, generalToBoardCoords(Yi, Xi, Board, Row, Col, Bx1, By))),
+    (LBx = 1, Bx = 0, generalToBoardCoords(Yi, Xi, Board, Row, Col, Bx, By))),
     nth0(By, Board, BP), nth0(Bx, BP, SmallBoard),
     checkIfPieceExists(SmallBoard, PieceType, Row/Col).
 
@@ -217,9 +206,7 @@ getAllMoves(Board, TotalSize, PieceType|2, LastMove, Yi/Xi, Yf/Xf, PiecePushed) 
 %Acceptance function for moves a player can execute in the first turn
 getAllMoves(Board, TotalSize, PieceType|1, Yi/Xi, Yf/Xf) :-
     insideBoard(TotalSize, Yi/Xi),
-    (getMove1Piece(TotalSize, PieceType, Board, Yi/Xi), checkMove1Destination(Board, Yi/Xi, Yf/Xf)),
-    move(Board, TempBoard, Yi, Xi, Yf, Xf), valid_moves(TempBoard, PieceType|2, [Yi/Xi, Yf/Xf], ListOfMoves),
-    \+ListOfMoves = [].
+    (getMove1Piece(TotalSize, PieceType, Board, Yi/Xi), checkMove1Destination(Board, Yi/Xi, Yf/Xf)).
 
 %DEBUG ONLY
 %Gets all the pieces a certain player can Play on this move
@@ -227,12 +214,21 @@ getAllPieces(Board, PieceType|Move, TotalSize, Yi/Xi):-
     insideBoard(TotalSize, Yi/Xi),
     (Move = 1, getMove1Piece(TotalSize, PieceType, Board, Yi/Xi)).
 
-%Moves a piece from OrigLive to OrigCol and returns the board in OutBoard
+%Passar lista de Peças (Posições) que se pode mexer
+%Cada peça pode mexer 1 ou 2 casa em cada direção desde que esteja dentro do board (> 0 && < boardSize)
+%[Se primeira jogada]: De cada posição ver todas as que colidem/passam por outra peça e não aceitar (ou seja se vai mexer 1 para a frente e n aceita ent nem vê o 2 para a frente)
+%[Se Segunda jogada]: De cada posição ver as que colide/passa por outra peça da msm equipa (fazer o msm q na primeira jogada nesse caso)
+%[Segudna jogada]: Se colidir com alguma peça do adversário verificar se essa pessa pode ser arrastada para trás(Se a pos. atrás está ou fora do board ou livre).
+%Note quando uma peça é arrastada para fora do board deve ser eliminada (talvez seja só não voltar a coloca-la dps de a tirar)
+
+%Needs to have full board in order to check if there'll be any valid moves after this play is made
+%Needs to have a board pair consisting only of the current 2 smallBoards that the player can move pieces in
+%Next, depending on the current move get a differente board Pair (1st move, just get 1st or 2nd pos| 2nd move needs to build the board depending on the 1st move)
+
 move(InBoard, OutBoard, OrigLine, OrigCol, DestLine, DestCol) :-
     setTile(InBoard, TempBoard, OrigLine, OrigCol, 'e', PastSymbol),
     setTile(TempBoard, OutBoard, DestLine, DestCol, PastSymbol, _).
 
-%Sets a tile to Symbol and returns the new Board in OutBoard and the symbol that was there previously to PastSymbol
 setTile(InBoard, OutBoard, GeneralLine, GeneralCol, Symbol, PastSymbol) :-
     generalToBoardCoords(GeneralLine, GeneralCol, InBoard, BoardLine, BoardCol, X, Y),
     nth0(Y, InBoard, BoardPair, BoardRest), 
@@ -250,8 +246,8 @@ setTile(InBoard, OutBoard, GeneralLine, GeneralCol, Symbol, PastSymbol) :-
 generalToBoardCoords(InGeneralLine, InGeneralCol, InBoard, OutBoardLine, OutBoardCol, OutBoardX, OutBoardY):-
     nth0(0, InBoard, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     ((InGeneralLine @>= BoardSize,
-        (NewLine is InGeneralLine - BoardSize, OutBoardLine = NewLine, OutBoardY = 1));
-        (InGeneralLine @< BoardSize, OutBoardLine = InGeneralLine, OutBoardY = 0)),
+        (NewLine is InGeneralLine - BoardSize, OutBoardLine = NewLine, OutBoardX = 1));
+        (InGeneralLine @< BoardSize, OutBoardLine = InGeneralLine, OutBoardX = 0)),
     ((InGeneralCol @>= BoardSize,
-        (NewCol is InGeneralCol - BoardSize, OutBoardCol = NewCol, OutBoardX = 1));
-        (InGeneralCol @< BoardSize, OutBoardCol = InGeneralCol, OutBoardX = 0)).
+        (NewCol is InGeneralCol - BoardSize, OutBoardCol = NewCol, OutBoardY = 1));
+        (InGeneralCol @< BoardSize, OutBoardCol = InGeneralCol, OutBoardY = 0)).
