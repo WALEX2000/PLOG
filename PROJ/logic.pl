@@ -246,11 +246,11 @@ setTile(InBoard, OutBoard, GeneralLine, GeneralCol, Symbol, PastSymbol) :-
 generalToBoardCoords(InGeneralLine, InGeneralCol, InBoard, OutBoardLine, OutBoardCol, OutBoardX, OutBoardY):-
     nth0(0, InBoard, BP1), nth0(0, BP1, B1), nth0(0, B1, R1), length(R1, BoardSize),
     ((InGeneralLine @>= BoardSize,
-        (NewLine is InGeneralLine - BoardSize, OutBoardLine = NewLine, OutBoardX = 1));
-        (InGeneralLine @< BoardSize, OutBoardLine = InGeneralLine, OutBoardX = 0)),
+        (NewLine is InGeneralLine - BoardSize, OutBoardLine = NewLine, OutBoardY = 1));
+        (InGeneralLine @< BoardSize, OutBoardLine = InGeneralLine, OutBoardY = 0)),
     ((InGeneralCol @>= BoardSize,
-        (NewCol is InGeneralCol - BoardSize, OutBoardCol = NewCol, OutBoardY = 1));
-        (InGeneralCol @< BoardSize, OutBoardCol = InGeneralCol, OutBoardY = 0)).
+        (NewCol is InGeneralCol - BoardSize, OutBoardCol = NewCol, OutBoardX = 1));
+        (InGeneralCol @< BoardSize, OutBoardCol = InGeneralCol, OutBoardX = 0)).
 
 %​choose_move(+Board, +Level, +Player, -Move)​
 %Level comes in 0 or 1
