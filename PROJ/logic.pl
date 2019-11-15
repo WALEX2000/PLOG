@@ -251,3 +251,12 @@ generalToBoardCoords(InGeneralLine, InGeneralCol, InBoard, OutBoardLine, OutBoar
     ((InGeneralCol @>= BoardSize,
         (NewCol is InGeneralCol - BoardSize, OutBoardCol = NewCol, OutBoardY = 1));
         (InGeneralCol @< BoardSize, OutBoardCol = InGeneralCol, OutBoardY = 0)).
+
+%​choose_move(+Board, +Level, +Player, -Move)​
+%Level comes in 0 or 1
+choose_move(Board, 0, PieceType|1, Move):-
+    valid_moves(Board, PieceType|1, ListOfMoves),
+    length(ListOfMoves, Size),
+    Last is Size-1,
+    X is random(Last),
+    nth0(X, ListOfMoves, Move).
