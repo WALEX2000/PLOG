@@ -5,14 +5,47 @@
 :-consult('input.pl').
 
 play() :-
-    createBoard(10,Board),
-    %playHvsH(Board).
-    playHvsM(Board,0).
-    %playMvsM(Board,0,0).
+    clear_screen,
+    repeat,
+    write("Enter board size:"),
+    get_number_input(BoardSize),
+    between(3, 16, BoardSize),!,    
+    create_board(BoardSize, Board),
+    menu('Play',
+        [ 
+            playHvsH : 'Human vs Human',
+            playHvsM : 'Human vs Machine',
+            playMvsM : 'Machine vs Machine',
+            quit     : 'Quit'
+        ],
+        Choice),
+    clear_screen,!,
+    play(Choice, Board).
+
+play(playHvsH, Board):-
+    playHvsH(Board).
+
+play(playHvsM, Board):-
+    repeat,
+    write("Enter bot difficulty(0/1):"),
+    get_number_input(BotDifficulty),
+    between(0,1,BotDifficulty),!,
+    playHvsM(Board, BotDifficulty).
+
+play(playMvsM, Board):-
+    repeat,
+    write("Enter bot 1 difficulty(0/1):"),
+    get_number_input(Bot1Difficulty),
+    between(0,1,Bot1Difficulty),
+    repeat,
+    write("Enter bot 2 difficulty(0/1):"),
+    get_number_input(Bot2Difficulty),
+    between(0,1,Bot2Difficulty),!,
+    playMvsM(Board, Bot1Difficulty, Bot2Difficulty).
 
 playHvsH(InitBoard) :-
     %%CHECK GAME OVER
-    game_over(InitBoard, Winner), printBoard(InitBoard, Winner);
+    game_over(InitBoard, Winner), print_board(InitBoard, Winner);
 
     %%GET BOARD SIZE%%
     board_size(InitBoard, BoardSize),
@@ -33,7 +66,7 @@ playHvsH(InitBoard) :-
     move([OrigLineP1M2/OrigColP1M2, DestLineP1M2/DestColP1M2], BoardPostP1Push, BoardPostP1Second),!,
 
     %%CHECK GAME OVER
-    (game_over(BoardPostP1Second, Winner), printBoard(BoardPostP1Second, Winner);
+    (game_over(BoardPostP1Second, Winner), print_board(BoardPostP1Second, Winner);
 
     %%PLAYER 2 FIRST MOVE%%
     display_game(BoardPostP1Second, 2, 1),
@@ -55,7 +88,7 @@ playHvsH(InitBoard) :-
 
 playHvsM(InitBoard, DifficultyBot) :-
     %%CHECK GAME OVER%%
-    game_over(InitBoard, Winner), printBoard(InitBoard, Winner);
+    game_over(InitBoard, Winner), print_board(InitBoard, Winner);
 
     %%GET BOARD SIZE%%
     board_size(InitBoard, BoardSize),
@@ -76,7 +109,7 @@ playHvsM(InitBoard, DifficultyBot) :-
     move([OrigLineP1M2/OrigColP1M2, DestLineP1M2/DestColP1M2], BoardPostP1Push, BoardPostP1Second),!,
 
     %%CHECK GAME OVER
-    (game_over(BoardPostP1Second, Winner), printBoard(BoardPostP1Second, Winner);
+    (game_over(BoardPostP1Second, Winner), print_board(BoardPostP1Second, Winner);
 
     %%PLAYER 2 FIRST MOVE%%
     display_game(BoardPostP1Second, 2, 1),!,
@@ -94,7 +127,7 @@ playHvsM(InitBoard, DifficultyBot) :-
 
 playMvsM(InitBoard, DifficultyBot1, DifficultyBot2) :-
     %%CHECK GAME OVER
-    game_over(InitBoard, Winner), printBoard(InitBoard, Winner);
+    game_over(InitBoard, Winner), print_board(InitBoard, Winner);
 
     %%PLAYER 1 FIRST MOVE%%
     display_game(InitBoard, 1, 1),
@@ -110,7 +143,7 @@ playMvsM(InitBoard, DifficultyBot1, DifficultyBot2) :-
     sleep(0.1),
 
     %%CHECK GAME OVER
-    (game_over(BoardPostP1Second, Winner), printBoard(BoardPostP1Second, Winner);
+    (game_over(BoardPostP1Second, Winner), print_board(BoardPostP1Second, Winner);
 
     %%PLAYER 2 FIRST MOVE%%
     display_game(BoardPostP1Second, 2, 1),!,

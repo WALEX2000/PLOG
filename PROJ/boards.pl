@@ -117,7 +117,7 @@ fill_small_board([Elem|Rest], Size, N):-
     Elem = Elist, N1 is N - 1,
     fill_small_board(Rest, Size, N1).
 
-create_smallBoard(B, Size):-
+create_small_board(B, Size):-
     fill_small_board(B, Size, Size).
 
 create_board(Size, Board):-

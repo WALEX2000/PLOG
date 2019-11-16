@@ -19,7 +19,17 @@ get_player_move(OrigLine, OrigCol, DestLine, DestCol, BoardSize, PlayerMoves, Pi
     read_cell(DestLine, DestCol, BoardSize),
     (member([OrigLine/OrigCol,DestLine/DestCol], PlayerMoves);
     member([[OrigLine/OrigCol,DestLine/DestCol], PiecePushed], PlayerMoves)).
-
 get_player_move(_, _, _, _, _, _, _):-
     write("Invalid move.\n"),
+    fail.
+
+get_number_input(Number):-
+    read_line_to_codes(user_input, Codes),
+    string_codes(String, Codes),
+    atom_chars(String, Chars),
+    number_string(Number, Chars).
+
+
+get_number_input(_):-
+    write("Invalid input.\n"),
     fail.
