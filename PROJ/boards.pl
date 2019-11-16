@@ -29,37 +29,6 @@ initialBoard([
                 ]
             ]).
 
-uwu([
-            [
-                [ 
-                    [b, e, b, b],
-                    [e, b, e, e],
-                    [e, e, e, e],
-                    [w, w, w, w]
-                ],
-                [
-                    [b, b, b, b],
-                    [e, e, e, e],
-                    [e, e, e, e],
-                    [w, w, w, w]
-                ]
-            ],
-            [
-                [
-                    [b, b, b, b],
-                    [e, e, e, e],
-                    [e, e, e, e],
-                    [w, w, w, w]
-                ],
-                [
-                    [b, e, b, b],
-                    [e, e, e, e],
-                    [e, w, b, e],
-                    [w, e, w, w]
-                ]
-            ]
-        ]).
-
 intermediateBoard([
                 [
                     [ 
@@ -124,28 +93,33 @@ endBoard([
 
 %Functions to create a board with variable size
 
-createList(0, _, []).
-createList(Size, Char, [Char|Rest]):-
+board_size(Board, Size):-
+    nth0(0, Board, BoardPair),
+    nth0(0, BoardPair, SmallBoard),
+    length(SmallBoard, Size).
+
+create_list(0, _, []).
+create_list(Size, Char, [Char|Rest]):-
     N is Size - 1,
-    createList(N, Char, Rest).
+    create_list(N, Char, Rest).
 
-fillSmallBoard(B, Size, Size):-
-    createList(Size, 'b', Blist),
+fill_small_board(B, Size, Size):-
+    create_list(Size, 'b', Blist),
     B = [Blist|Rest], N is Size - 1,
-    fillSmallBoard(Rest, Size, N).
+    fill_small_board(Rest, Size, N).
 
-fillSmallBoard([Elem], Size, 1):-
-    createList(Size, 'w', Wlist),
+fill_small_board([Elem], Size, 1):-
+    create_list(Size, 'w', Wlist),
     Elem = Wlist.
 
-fillSmallBoard([Elem|Rest], Size, N):-
-    createList(Size, 'e', Elist),
+fill_small_board([Elem|Rest], Size, N):-
+    create_list(Size, 'e', Elist),
     Elem = Elist, N1 is N - 1,
-    fillSmallBoard(Rest, Size, N1).
+    fill_small_board(Rest, Size, N1).
 
-createSmallBoard(B, Size):-
-    fillSmallBoard(B, Size, Size).
+create_small_board(B, Size):-
+    fill_small_board(B, Size, Size).
 
-createBoard(Size, Board):-
-    createSmallBoard(B, Size),
+create_board(Size, Board):-
+    create_small_board(B, Size),
     Board = [[B,B],[B,B]].
