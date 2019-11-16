@@ -124,6 +124,11 @@ endBoard([
 
 %Functions to create a board with variable size
 
+board_size(Board, Size):-
+    nth0(0, Board, BoardPair),
+    nth0(0, BoardPair, SmallBoard),
+    length(SmallBoard, Size).
+
 createList(0, _, []).
 createList(Size, Char, [Char|Rest]):-
     N is Size - 1,
