@@ -279,3 +279,100 @@ choose_move(Board, 0, PieceType|2, LastMove, Move):-
     length(ListOfMoves, Size),
     X is random(Size),
     nth0(X, ListOfMoves, Move).
+
+%Choose the move for a level 1 bot difficulty setting
+choose_move(Board, 1, PieceType|1, Move):-
+    valid_moves(Board, PieceType|1, ListOfMoves),
+    %For each move in piece of moves give it a value and store it in a list
+    storeValueList(Board, ListOfMoves, PieceType|1, List),
+    %Now choose a random move from the list of moves with the highest value
+    max_list(List, Max),
+    getRandomMaxMove(ListOfMoves, List, Max, Move),
+    printValueList(ListOfMoves, List).
+
+%Print Value List for DEBUG
+printValueList([], []).
+printValueList([Move|Rest], [Value|OtherValues]):-
+    write(Move), write(': '), write(Value), nl,
+    printValueList(Rest, OtherValues).
+
+%Gets a random move with max value from the list of moves
+getRandomMaxMove(ListOfMoves, List, Max, Move):-
+    findall(Index, nth0(Index, List, Max), ListOfIndexes),
+    length(ListOfIndexes, Size), X is random(Size),
+    nth0(X, ListOfIndexes, ChosenIndex),
+    nth0(ChosenIndex, ListOfMoves, Move).
+
+%Returns a List of Values in List
+storeValueList(Board, ListOfMoves, PieceType|1, List):-
+    storeValueList(Board, ListOfMoves, PieceType|1, [], List).
+
+storeValueList(Board, [Move|Rest], PieceType|1, List, FinalList):-
+    value(Board, PieceType|1, Move, Value),
+    append(List,[Value],NewList),
+    storeValueList(Board, Rest, PieceType|1, NewList, FinalList).
+
+storeValueList(_, [], _, List, FinalList):- FinalList = List.
+
+ 
+%value(+Board, +Player, -Value)
+%Evaluate a board for a plyer's first move
+%So on the first move I must give positive value +2 for each piece I can eat in the next move,
+%negative value -1 for each piece the enemy could eat on the next move if the board was like this
+value(Board, PieceType|1, Move, Value):-
+    valid_moves(Board, PieceType|2, Move, ListOfMoves),
+    countEatMoves(ListOfMoves, Count),
+    move(Move, Board, TempBoard),
+    ((PieceType = w, EnemyPiece = b);
+     (PieceType = b, EnemyPiece = w)),
+    getEnemyMoveValue(TempBoard, 1, EnemyPiece|1, EnemyValue),
+    %get the best move's value from the enemy if he played his first move on a board with our Move
+    Value is Count * 2 - EnemyValue.
+
+getEnemyMoveValue(TempBoard, 1, EnemyPiece|1, Value):-
+    valid_moves(TempBoard, EnemyPiece|1, ListOfMoves), %Get all valid moves enemy can play on first move
+    storeEnemyValueList(TempBoard, ListOfMoves, EnemyPiece|1, List),
+    max_list(List, Value).
+
+%Stores a list of values that the enemy has for his next play if it were to happen now
+storeEnemyValueList(Board, ListOfMoves, PieceType|1, List):-
+    storeEnemyValueList(Board, ListOfMoves, PieceType|1, [], List).
+
+storeEnemyValueList(Board, [Move|Rest], PieceType|1, List, FinalList):-
+    valid_moves(Board, PieceType|2, Move, ListOfMoves), %Get all valid moves enemy can play on his second move for a given first move
+    countEatMoves(ListOfMoves, Value),
+    append(List,[Value],NewList),
+    storeEnemyValueList(Board, Rest, PieceType|1, NewList, FinalList).
+
+storeEnemyValueList(_, [], _, List, FinalList):- FinalList = List.
+
+%[[Yi/Xi, Yf/Xf],[Yi/Xf, Yf/Xf]]
+%Adds 1 to the moves where [_|[[_|[]]]]
+%Moves have a second element that has something in the beggining but nothing after
+countEatMoves(ListOfMoves, Count):-
+    countEatMoves(ListOfMoves, 0, Count).
+
+countEatMoves([Move|OtherMoves], Count, FinalCount):-
+    (Move = [_|[[_|[]]]], NewCount is Count + 1, countEatMoves(OtherMoves, NewCount, FinalCount));
+    countEatMoves(OtherMoves, Count, FinalCount).
+
+countEatMoves([], Count, FinalCount):- FinalCount is Count.
+
+
+
+%Evaluate a board for a plyer's second move
+%This predicate will give + points for friendly pieces and - points por enemy pieces
+%On the second move I must give positive value +1, +2. +3 for each piece I can eat that's makinng the enemy's board closer to losing
+%Example, if an enemy board only has 2 pieces and I can eat one more it gives me +3, if it had 4 and I could eat 1 it would give me +1
+%I must also give negativa value for the same thing the enemy could do to me on his next move
+
+value(Board, PieceType|2, Value).
+
+
+   
+
+%To properly give value to a move the bot has to see what he's gaining from the move and what he's losing
+%As such he not only needs to see the moves where he can eat
+%But also the moves the enemy will make next to eat his pieces
+%And then he must choose one move where he's making the enemy's weakest board weaker, but also keeping his weakest board from getting weaker
+%Boards are weak depending on the amount of friendly pieces they have

@@ -122,3 +122,9 @@ playMvsM(InitBoard, DifficultyBot1, DifficultyBot2) :-
     %%NEXT TURN
     playMvsM(BoardPostP2Second, DifficultyBot1, DifficultyBot2)).
 
+
+testChooseMove(Move):-
+    intermediateBoard(Board),
+    printBoard(Board),
+    choose_move(Board, 1, w|1, Move).
+
