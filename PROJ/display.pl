@@ -1,10 +1,10 @@
 :-use_module(library(lists)).
 :-use_module(library(ansi_term)).
 
-%symbol(w,'○').
-%symbol(b,'●').
-symbol(w,'⛀').
-symbol(b,'⛂').
+symbol(w,'○').
+symbol(b,'●').
+%symbol(w,'⛀').
+%symbol(b,'⛂').
 symbol(e,' ').
 
 clear_screen() :-

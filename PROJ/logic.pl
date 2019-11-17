@@ -287,8 +287,14 @@ choose_move(Board, 1, PieceType|1, Move):-
     storeValueList(Board, ListOfMoves, PieceType|1, List),
     %Now choose a random move from the list of moves with the highest value
     max_list(List, Max),
-    getRandomMaxMove(ListOfMoves, List, Max, Move),
-    printValueList(ListOfMoves, List).
+    getRandomMaxMove(ListOfMoves, List, Max, Move).
+    %printValueList(ListOfMoves, List).
+
+choose_move(Board, 1, PieceType|2, LastMove, Move):-
+    valid_moves(Board, PieceType|2, LastMove, ListOfMoves),
+    storeValueList(Board, ListOfMoves, PieceType|2, List),
+    max_list(List, Max),
+    getRandomMaxMove(ListOfMoves, List, Max, Move).
 
 %Print Value List for DEBUG
 printValueList([], []).
@@ -304,13 +310,13 @@ getRandomMaxMove(ListOfMoves, List, Max, Move):-
     nth0(ChosenIndex, ListOfMoves, Move).
 
 %Returns a List of Values in List
-storeValueList(Board, ListOfMoves, PieceType|1, List):-
-    storeValueList(Board, ListOfMoves, PieceType|1, [], List).
+storeValueList(Board, ListOfMoves, PieceType|MoveN, List):-
+    storeValueList(Board, ListOfMoves, PieceType|MoveN, [], List).
 
-storeValueList(Board, [Move|Rest], PieceType|1, List, FinalList):-
-    value(Board, PieceType|1, Move, Value),
+storeValueList(Board, [Move|Rest], PieceType|MoveN, List, FinalList):-
+    value(Board, PieceType|MoveN, Move, Value),
     append(List,[Value],NewList),
-    storeValueList(Board, Rest, PieceType|1, NewList, FinalList).
+    storeValueList(Board, Rest, PieceType|MoveN, NewList, FinalList).
 
 storeValueList(_, [], _, List, FinalList):- FinalList = List.
 
@@ -358,21 +364,40 @@ countEatMoves([Move|OtherMoves], Count, FinalCount):-
 
 countEatMoves([], Count, FinalCount):- FinalCount is Count.
 
+countPieces(Row, PieceType, Count):-
+    countPieces(Row, PieceType, 0, Count).
+
+countPieces([Elem|Rest], PieceType, Count, FinalCount):-
+    (Elem = PieceType, NewCount is Count + 1, countPieces(Rest, PieceType, NewCount, FinalCount));
+    countPieces(Rest, PieceType, Count, FinalCount).
+
+countPieces(_, _, Count, FinalCount):- FinalCount is Count.
+
+valueSmallBoard(SmallBoard, w, Value):-
+    SmallBoard = [Row1|[Row2|[Row3|[Row4]]]],
+    length(Row1, Max),
+    countPieces(Row1, w, F1), countPieces(Row2, w, F2),
+    countPieces(Row3, w, F3), countPieces(Row4, w, F4),
+    countPieces(Row1, b, E1), countPieces(Row2, b, E2),
+    countPieces(Row3, b, E3), countPieces(Row4, b, E4),
+    Value is Max - E1 - E2 - E3 - E4 + F1 + F2 + F3 + F4.
+
+valueSmallBoard(SmallBoard, b, Value):-
+    SmallBoard = [Row1|[Row2|[Row3|[Row4]]]],
+    length(Row1, Max),
+    countPieces(Row1, b, F1), countPieces(Row2, b, F2),
+    countPieces(Row3, b, F3), countPieces(Row4, b, F4),
+    countPieces(Row1, w, E1), countPieces(Row2, w, E2),
+    countPieces(Row3, w, E3), countPieces(Row4, w, E4),
+    Value is Max - E1 - E2 - E3 - E4 + F1 + F2 + F3 + F4.
 
 
-%Evaluate a board for a plyer's second move
-%This predicate will give + points for friendly pieces and - points por enemy pieces
-%On the second move I must give positive value +1, +2. +3 for each piece I can eat that's makinng the enemy's board closer to losing
-%Example, if an enemy board only has 2 pieces and I can eat one more it gives me +3, if it had 4 and I could eat 1 it would give me +1
-%I must also give negativa value for the same thing the enemy could do to me on his next move
-
-value(Board, PieceType|2, Value).
-
-
-   
-
-%To properly give value to a move the bot has to see what he's gaining from the move and what he's losing
-%As such he not only needs to see the moves where he can eat
-%But also the moves the enemy will make next to eat his pieces
-%And then he must choose one move where he's making the enemy's weakest board weaker, but also keeping his weakest board from getting weaker
-%Boards are weak depending on the amount of friendly pieces they have
+value([BP1|[BP2]], PieceType|2, Move, Value):-
+    %Go board by board and count how many friendly pieces vs how many enemy's pieces
+    nth0(0, BP1, B1), nth0(1, BP1, B2), nth0(0, BP2, B3), nth0(1, BP2, B4),
+    valueSmallBoard(B1, PieceType, V1),
+    valueSmallBoard(B2, PieceType, V2),
+    valueSmallBoard(B3, PieceType, V3),
+    valueSmallBoard(B4, PieceType, V4),
+    Value is V1 + V2 + V3 + V4.
+    
