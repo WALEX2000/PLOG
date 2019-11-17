@@ -380,21 +380,21 @@ countPieces([Elem|Rest], PieceType, Count, FinalCount):-
 
 countPieces(_, _, Count, FinalCount):- FinalCount is Count.
 
-valueSmallBoard(SmallBoard, w, Value):-
-    SmallBoard = [Row1|[Row2|[Row3|[Row4]]]],
-    length(Row1, Max),
-    countPieces(Row1, w, F1), countPieces(Row2, w, F2),
-    countPieces(Row3, w, F3), countPieces(Row4, w, F4),
-    countPieces(Row1, b, E1), countPieces(Row2, b, E2),
-    countPieces(Row3, b, E3), countPieces(Row4, b, E4),
-    Value is Max - E1 - E2 - E3 - E4 + F1 + F2 + F3 + F4.
+valueSmallBoard([], _, Value, FinalValue):- FinalValue is Value.
 
-valueSmallBoard(SmallBoard, b, Value):-
-    SmallBoard = [Row1|[Row2|[Row3|[Row4]]]],
-    length(Row1, Max),
-    countPieces(Row1, b, F1), countPieces(Row2, b, F2),
-    countPieces(Row3, b, F3), countPieces(Row4, b, F4),
-    countPieces(Row1, w, E1), countPieces(Row2, w, E2),
-    countPieces(Row3, w, E3), countPieces(Row4, w, E4),
-    Value is Max - E1 - E2 - E3 - E4 + F1 + F2 + F3 + F4.
+valueSmallBoard([Row|Rest], w, Value, FinalValue):-
+    countPieces(Row, w, F),
+    countPieces(Row, b, E),
+    NewValue is Value + F - E,
+    valueSmallBoard(Rest, w, NewValue, FinalValue).
+
+valueSmallBoard([Row|Rest], b, Value, FinalValue):-
+    countPieces(Row, b, F),
+    countPieces(Row, w, E),
+    NewValue is Value + F - E,
+    valueSmallBoard(Rest, w, NewValue, FinalValue).
+
+valueSmallBoard(SmallBoard, PieceType, Value):-
+    SmallBoard = [Row|_], length(Row, Max),
+    valueSmallBoard(SmallBoard, PieceType, Max, Value).
     
