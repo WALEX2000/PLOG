@@ -28,8 +28,6 @@ get_number_input(Number):-
     string_codes(String, Codes),
     atom_chars(String, Chars),
     number_string(Number, Chars).
-
-
 get_number_input(_):-
     write("Invalid input.\n"),
     fail.

@@ -9,7 +9,7 @@ play() :-
     repeat,
     write("Enter board size:"),
     get_number_input(BoardSize),
-    between(3, 16, BoardSize),!,    
+    between(3, 13, BoardSize),!,    
     create_board(BoardSize, Board),
     menu('Play',
         [ 
@@ -160,10 +160,4 @@ playMvsM(InitBoard, DifficultyBot1, DifficultyBot2) :-
 
     %%NEXT TURN
     playMvsM(BoardPostP2Second, DifficultyBot1, DifficultyBot2)).
-
-
-testChooseMove(Move):-
-    intermediateBoard(Board),
-    printBoard(Board),
-    choose_move(Board, 1, w|1, Move).
 

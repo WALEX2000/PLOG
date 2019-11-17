@@ -181,7 +181,7 @@ print_board([BP1|[BP2|_]]) :-
 print_board(Board, Winner) :-
     clear_screen,
     print_board(Board),
-    write("AND THE WINNER ISSSSSS, PLAYER "),
+    write("And the winner is: Player "),
     write(Winner),
     write("\n").
 
