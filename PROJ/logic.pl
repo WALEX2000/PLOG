@@ -273,13 +273,6 @@ choose_move(Board, 0, PieceType|1, Move):-
     Last is Size-1,
     X is random(Last),
     nth0(X, ListOfMoves, Move).
-
-choose_move(Board, 0, PieceType|2, LastMove, Move):-
-    valid_moves(Board, PieceType|2, LastMove, ListOfMoves),
-    length(ListOfMoves, Size),
-    X is random(Size),
-    nth0(X, ListOfMoves, Move).
-
 %Choose the move for a level 1 bot difficulty setting
 choose_move(Board, 1, PieceType|1, Move):-
     valid_moves(Board, PieceType|1, ListOfMoves),
@@ -290,6 +283,11 @@ choose_move(Board, 1, PieceType|1, Move):-
     getRandomMaxMove(ListOfMoves, List, Max, Move).
     %printValueList(ListOfMoves, List).
 
+choose_move(Board, 0, PieceType|2, LastMove, Move):-
+    valid_moves(Board, PieceType|2, LastMove, ListOfMoves),
+    length(ListOfMoves, Size),
+    X is random(Size),
+    nth0(X, ListOfMoves, Move).
 choose_move(Board, 1, PieceType|2, LastMove, Move):-
     valid_moves(Board, PieceType|2, LastMove, ListOfMoves),
     storeValueList(Board, ListOfMoves, PieceType|2, List),
@@ -334,6 +332,15 @@ value(Board, PieceType|1, Move, Value):-
     getEnemyMoveValue(TempBoard, 1, EnemyPiece|1, EnemyValue),
     %get the best move's value from the enemy if he played his first move on a board with our Move
     Value is Count * 2 - EnemyValue.
+
+value([BP1|[BP2]], PieceType|2, _, Value):-
+    %Go board by board and count how many friendly pieces vs how many enemy's pieces
+    nth0(0, BP1, B1), nth0(1, BP1, B2), nth0(0, BP2, B3), nth0(1, BP2, B4),
+    valueSmallBoard(B1, PieceType, V1),
+    valueSmallBoard(B2, PieceType, V2),
+    valueSmallBoard(B3, PieceType, V3),
+    valueSmallBoard(B4, PieceType, V4),
+    Value is V1 + V2 + V3 + V4.
 
 getEnemyMoveValue(TempBoard, 1, EnemyPiece|1, Value):-
     valid_moves(TempBoard, EnemyPiece|1, ListOfMoves), %Get all valid moves enemy can play on first move
@@ -390,14 +397,4 @@ valueSmallBoard(SmallBoard, b, Value):-
     countPieces(Row1, w, E1), countPieces(Row2, w, E2),
     countPieces(Row3, w, E3), countPieces(Row4, w, E4),
     Value is Max - E1 - E2 - E3 - E4 + F1 + F2 + F3 + F4.
-
-
-value([BP1|[BP2]], PieceType|2, Move, Value):-
-    %Go board by board and count how many friendly pieces vs how many enemy's pieces
-    nth0(0, BP1, B1), nth0(1, BP1, B2), nth0(0, BP2, B3), nth0(1, BP2, B4),
-    valueSmallBoard(B1, PieceType, V1),
-    valueSmallBoard(B2, PieceType, V2),
-    valueSmallBoard(B3, PieceType, V3),
-    valueSmallBoard(B4, PieceType, V4),
-    Value is V1 + V2 + V3 + V4.
     
