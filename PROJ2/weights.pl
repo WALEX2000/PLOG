@@ -19,34 +19,34 @@ solveTree(Tree, Weight):-
     treeWeight(Tree, Weight).
 
 treeWeight([], 0).
-treeWeight([[_,Subtree]|Rest], Weight):-
+treeWeight([(_|Subtree)|Rest], Weight):-
     is_list(Subtree),
     treeWeight(Subtree, SubtreeWeight),
     NewWeight #= Weight - SubtreeWeight,
     treeWeight(Rest, NewWeight).
-treeWeight([[_,Node]|Rest], Weight):-
+treeWeight([(_|Node)|Rest], Weight):-
     (\+is_list(Node)),
     NewWeight #= Weight - Node,
     treeWeight(Rest, NewWeight).
 
 
 treeWeightsList([], []).
-treeWeightsList([[_,Subtree]|Rest], TotalWeights):-
+treeWeightsList([(_|Subtree)|Rest], TotalWeights):-
     is_list(Subtree),
     treeWeightsList(Subtree, SubtreeWeights),
     append(SubtreeWeights, Weights, TotalWeights),
     treeWeightsList(Rest, Weights).
-treeWeightsList([[_,Node]|Rest], [Node|RestWeights]):-
+treeWeightsList([(_|Node)|Rest], [Node|RestWeights]):-
     (\+is_list(Node)),
     treeWeightsList(Rest, RestWeights).
 
 getTorques([], 0, 0).
-getTorques([[Pos,Node]|Rest], PosTorque, NegTorque):-
+getTorques([(Pos|Node)|Rest], PosTorque, NegTorque):-
     Pos>0,
     getNodeTorque(Pos, Node, NodeTorque),
     NewPosTorque #= PosTorque - NodeTorque,
     getTorques(Rest, NewPosTorque, NegTorque).
-getTorques([[Pos,Node]|Rest], PosTorque, NegTorque):-
+getTorques([(Pos|Node)|Rest], PosTorque, NegTorque):-
     Pos<0,
     getNodeTorque(Pos, Node, NodeTorque),
     NewNegTorque #= NegTorque - NodeTorque,
