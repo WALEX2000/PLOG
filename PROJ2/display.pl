@@ -34,11 +34,11 @@ printRoot(Total):-
     print('  |'), nl.
 
 getRightMostChild([Elem|[]], Elem).
-getRightMostChild([Elem|Rest], RightMostChild):-
+getRightMostChild([_|Rest], RightMostChild):-
     getRightMostChild(Rest, RightMostChild).
 
 getLeftMostWeight([], 1000000). %Really big number to ensure success in case there are no weights left
-getLeftMostWeight([Elem/Pos|Rest], LeftMostWeight):-
+getLeftMostWeight([Elem/Pos|_], LeftMostWeight):-
     isWeight(Elem), LeftMostWeight = Pos, !.
 getLeftMostWeight([Elem|Rest], LeftMostWeight):-
     \+isWeight(Elem),
@@ -104,11 +104,15 @@ printRowBottomRest([Elem|Rest], LastPos):-
       print('    |'),
       printRowBottomRest(Rest, CurrPos))).
 
+digits(X,1):-10>X,X>0.
+digits(X,Y):-A=X/10,digits(A,B),Y=B+1.
+
 printWeight(WeightValue, WeightGP, CurrentPosition, ExtraSpace, WeightGP, 2):-
     Offset is WeightGP - CurrentPosition - 1,
     writeRepeat('     ', Offset),
     Space is 2 - ExtraSpace, writeRepeat(' ', Space),
-    ((number(WeightValue), print('|'), print(WeightValue), print('|')); %TODO add whitespace to make up 3 spaces with numbers
+    ((number(WeightValue), print('|'), print(WeightValue),
+      digits(WeightValue, Ndigits), S is 3 - Ndigits, writeRepeat(' ', S), print('|')); %TODO add whitespace to make up 3 spaces with numbers
      (print('|???|'))). %Print node if it's unknown
 
 %For printing Subtrees
@@ -123,7 +127,7 @@ printStem(Node, RootGP, CurrPos, ExtraSpace, RootGP, 1):- %For weights
     Spaces is 3 - ExtraSpace, writeRepeat(' ', Spaces),
     print('_|_').
 
-printStem(Node, RootGP, CurrPos, ExtraSpace, RootGP, 0):- %For Subtrees
+printStem(_, RootGP, CurrPos, ExtraSpace, RootGP, 0):- %For Subtrees
     WS is RootGP - CurrPos - 1, writeRepeat('     ', WS),
     Spaces is 4 - ExtraSpace, writeRepeat(' ', Spaces),
     print('|').
@@ -160,6 +164,7 @@ printLineBottom([Node/NodeGP|Rest], CurrPos, ExtraSpace):-
     printStem(Node, NodeGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
     printLineBottom(Rest, NewPos, NewExtraSpace).
 
+%Loop for printing entire tree
 printTreeLoop([], _).
 printTreeLoop(Line, Margin):-
     printMargin(Margin),
@@ -171,7 +176,7 @@ printTreeLoop(Line, Margin):-
 %Main Function to print tree
 printTree:-
     complexTree(Tree),
-    Margin = 0,
+    Margin = 1,
     getLeftMostPosition(Tree, LeftMostValue),
     RootGlobalPosition is abs(LeftMostValue),
     nl,
