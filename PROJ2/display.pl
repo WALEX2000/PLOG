@@ -37,23 +37,23 @@ getRightMostChild([Elem|[]], Elem).
 getRightMostChild([Elem|Rest], RightMostChild):-
     getRightMostChild(Rest, RightMostChild).
 
-getLeftMostWeight([], (1000000|_)). %Really big number to ensure success in case there are no weights left
+getLeftMostWeight([], 1000000). %Really big number to ensure success in case there are no weights left
+getLeftMostWeight([Elem/Pos|Rest], LeftMostWeight):-
+    isWeight(Elem), LeftMostWeight = Pos, !.
 getLeftMostWeight([Elem|Rest], LeftMostWeight):-
-    isWeight(Elem), LeftMostWeight = Elem.
-
-getLeftMostWeight([_|Rest], LeftMostWeight):-
-    getLeftMostWeight(Rest).
+    \+isWeight(Elem),
+    getLeftMostWeight(Rest, LeftMostWeight).
 
 %Check if Subtree can begin there or needs to go down more
-checkIfSubtreeValid(Subtree, RightMostPos, Rest):-
+checkIfSubtreeValid(Subtree/RootGP, CurrPos, Rest):-
     Subtree = [LeftChild|OtherNodes],
-    LeftChild = (ChildPos|_), ChildPos >= RightMostPos,
+    LeftChild = (LeftChildPos|_),
+    LeftChildGP is RootGP + LeftChildPos, LeftChildGP > CurrPos,
     %Now check if rightMostChild is in conflict with LeftMostWeight
     getRightMostChild(OtherNodes, RightMostChild),
-    getLeftMostWeight(Rest, LeftMostWeight),
-    RightMostChild = (ChildPos|_),
-    LeftMostWeight = (WeightPos|_),
-    ChildPos < WeightPos, %The problem is that the ChildPos is relative to parent Tree and we need the global position here
+    getLeftMostWeight(Rest, WeightPos),
+    RightMostChild = (RightChildPos|_),
+    RightChildGP is RootGP + RightChildPos, RightChildGP < WeightPos.
 
 printRowItems([Elem|Rest], TotalSpacing, RightMostPos):-
     Elem = (CurrPos|Node),
@@ -66,8 +66,6 @@ printRowItems([Elem|Rest], TotalSpacing, RightMostPos):-
       printRowItems(Rest, CurrPos) %Go to next node TODO fix
     );
     %If it's a subTree then evaluate if it's possible to place it here
-        %Check if the leftmost Item overlaps with any weight or subtree on the left
-        %Check if the RightMost overlaps with any weight
     (
      %Check if it's possible to "unwrap" the tree here
      checkIfSubtreeValid(Node, RightMostPos, Rest),
@@ -115,7 +113,7 @@ printRowBottom([Elem|Rest], LastPos):-
      print('|'),
      printRowBottomRest(Rest, CurrPos))).
 
-printRowBottomRest([], _):- nl.
+printRowBottomRest([], _).
 printRowBottomRest([Elem|Rest], LastPos):-
     Elem = (CurrPos|Node),
     ((isWeight(Node),
@@ -128,18 +126,23 @@ printRowBottomRest([Elem|Rest], LastPos):-
       print('    |'),
       printRowBottomRest(Rest, CurrPos))).
 
-%Node can be a weightValue or a List
-printNode(WeightValue, WeightGP, CurrentPosition, ExtraSpace, WeightGP, 2):- %For Weights
-    isWeight(WeightValue),
-    printWeightSpacing, %Needs to check if there are any LeftOverSpaces and print the amount of spaces needed until this pos 
-    ((number(WeightValue), print('|'), print(WeightValue), print('|')); %TODO add whitespace to make up total of 3 spaces with numbers
-    (print('|???|'))), %Print node if it's unknown
-    Left.
+printWeight(WeightValue, WeightGP, CurrentPosition, 2, WeightGP, 2):- %In case of previous also being a weight
+    Offset is WeightGP - CurrentPosition - 1,
+    writeRepeat('     ', Offset),
+    ((number(WeightValue), print('|'), print(WeightValue), print('|')); %TODO add whitespace to make up 3 spaces with numbers
+     (print('|???|'))). %Print node if it's unknown
 
-printNode(Subtree, RootGP, CurrentPosition, ExtraSpace, NewPos, 0):- %List (LIST might be impossible to print)
+printWeight(WeightValue, WeightGP, CurrentPosition, 0, WeightGP, 2):- %In case of previous being a List
+    Offset is WeightGP - CurrentPosition - 1,
+    writeRepeat('     ', Offset),
+    ((number(WeightValue), print('  |'), print(WeightValue), print('|')); %TODO add whitespace to make up 3 spaces with numbers
+     (print('  |???|'))). %Print node if it's unknown
+
+%For printing Subtrees
+printNode(Subtree, RootGP, CurrentPosition, ExtraSpace, NewPos, 0):-
     printRow(Subtree, RootGP),
     getRightMostChild(Subtree, Child),
-    Child = (NewPos|_).
+    Child = (LocalPos|_), NewPos is LocalPos + RootGP.
 
 printStem(Subtree, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace):-
     printRowBottom(Subtree, RootGP),
@@ -147,10 +150,29 @@ printStem(Subtree, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace):-
     Child = (NewPos|_).
 
 %Prints a line of Subtrees and weights (Subtrees can be invalid and thus need to go down more)
-printLine([], _, _):- nl.
-printLine([Node/RootGP|Rest], CurrPos, ExtraSpace):-
+printLine([], _, _, List, List):- nl.
+printLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList):- %If Node is weight
+    isWeight(Node),
+    printWeight(Node, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
+    printLine(Rest, NewPos, NewExtraSpace, TmpList, NewList).
+
+printLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList):- %If node is Valid Subtree
+    checkIfSubtreeValid(Node/RootGP, CurrPos, Rest),
+    addChildrenToList(Node, RootGP, TmpList, NewTmpList),
     printNode(Node, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
-    printLine(Rest, NewPos, NewExtraSpace).
+    printLine(Rest, NewPos, NewExtraSpace, NewTmpList, NewList).
+
+printLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList):- %If node is invalid Subtree
+    append(TmpList, [Node/RootGP], NewTmpList),
+    WS is RootGP - CurrPos - 1,
+    writeRepeat('     ', WS), print('    |'),
+    printLine(Rest, RootGP, 0, NewTmpList, NewList).
+
+addChildrenToList([], _, ResultList, ResultList).
+addChildrenToList([Child|Rest], RootGP, TmpList, ResultList):-
+    Child = (Pos|Node), PosGP is Pos + RootGP,
+    append(TmpList, [Node/PosGP], NewTmp),
+    addChildrenToList(Rest, RootGP, NewTmp, ResultList).
 
 printLineBottom([], _, _):- nl.
 printLineBottom([Node/RootGP|Rest], CurrPos, ExtraSpace):-
@@ -163,13 +185,18 @@ printTree:-
     Margin = 1,
     getLeftMostPosition(Tree, LeftMostValue),
     RootGlobalPosition is abs(LeftMostValue),
-
     printMargin(Margin),
     printRoot(RootGlobalPosition),
+
     printMargin(Margin),
-    printLine([Tree/RootGlobalPosition], 0, 0),
+    printLine([Tree/RootGlobalPosition], 0, 0, [], NewLine),
     printMargin(Margin),
-    printLineBottom([Tree/RootGlobalPosition], 0, 0).
+    printLineBottom([Tree/RootGlobalPosition], 0, 0),
+    printMargin(Margin),
+    printLine(NewLine, 0, 0, [], _),
+    printMargin(Margin),
+    
+    printLineBottom(NewLine, 0, 0).
 
    % printRow(Tree, RootGlobalPosition), %TODO Needs to change the 2nd argument here
    % printMargin(Margin),
