@@ -31,7 +31,7 @@ writeRepeat(Char, Total):-
 %Prints The Root of the Tree
 printRoot(Total):-
     writeRepeat('     ', Total),
-    print('|'), nl.
+    print('  |'), nl.
 
 getRightMostChild([Elem|[]], Elem).
 getRightMostChild([Elem|Rest], RightMostChild):-
@@ -55,39 +55,17 @@ checkIfSubtreeValid(Subtree/RootGP, CurrPos, Rest):-
     RightMostChild = (RightChildPos|_),
     RightChildGP is RootGP + RightChildPos, RightChildGP < WeightPos.
 
-printRowItems([Elem|Rest], TotalSpacing, RightMostPos):-
-    Elem = (CurrPos|Node),
-    %If it's a weight then print('|111|')
-    ((isWeight(Node),
-      WS is TotalSpacing + CurrPos - 1,
-      writeRepeat('     ', WS), %Write white space until node is reached
-      ((number(Node), print('|'), print(Node), print('|')); %Print node if it has numbers on it TODO add whitespace to make up total of 3 spaces with numbers
-       (print('|???|'))), %Print node if it's unknown
-      printRowItems(Rest, CurrPos) %Go to next node TODO fix
-    );
-    %If it's a subTree then evaluate if it's possible to place it here
-    (
-     %Check if it's possible to "unwrap" the tree here
-     checkIfSubtreeValid(Node, RightMostPos, Rest),
-     %if it is then calculate the amount of spacing to get there and start printing like in the printRow thing, then go to next item
-     %If it's not then calculate the spacing necessary and place a |. Then go to next item
-     WS is TotalSpacing + CurrPos,
-     writeRepeat('     ', WS),
-     print('|'),
-     printRowBottomRest(Rest, CurrPos))).
-    %if all good then write like on the Row
-    %If not then place a | instead
-    %Will have to return a list with all the nodes on the next level (New Nodes or leftovers)
-    
 isWeight(Node):- var(Node).
 isWeight(Node):- number(Node).
 
 printMargin(Margin):- writeRepeat('     ', Margin).
 
-printRow([Elem|Rest], RootGP):-
+printRow([Elem|Rest], RootGP, CurrPos, ExtraSpace):-
     Elem = (FirstPos|_),
-    WS is RootGP + FirstPos,
+    FirstGP is RootGP + FirstPos,
+    WS is FirstGP - CurrPos - 1,
     writeRepeat('     ', WS),
+    Space is 4 - ExtraSpace, writeRepeat(' ', Space),
     print('+'),
     printRowRest(Rest, FirstPos).
 
@@ -126,28 +104,29 @@ printRowBottomRest([Elem|Rest], LastPos):-
       print('    |'),
       printRowBottomRest(Rest, CurrPos))).
 
-printWeight(WeightValue, WeightGP, CurrentPosition, 2, WeightGP, 2):- %In case of previous also being a weight
+printWeight(WeightValue, WeightGP, CurrentPosition, ExtraSpace, WeightGP, 2):-
     Offset is WeightGP - CurrentPosition - 1,
     writeRepeat('     ', Offset),
+    Space is 2 - ExtraSpace, writeRepeat(' ', Space),
     ((number(WeightValue), print('|'), print(WeightValue), print('|')); %TODO add whitespace to make up 3 spaces with numbers
      (print('|???|'))). %Print node if it's unknown
 
-printWeight(WeightValue, WeightGP, CurrentPosition, 0, WeightGP, 2):- %In case of previous being a List
-    Offset is WeightGP - CurrentPosition - 1,
-    writeRepeat('     ', Offset),
-    ((number(WeightValue), print('  |'), print(WeightValue), print('|')); %TODO add whitespace to make up 3 spaces with numbers
-     (print('  |???|'))). %Print node if it's unknown
-
 %For printing Subtrees
 printNode(Subtree, RootGP, CurrentPosition, ExtraSpace, NewPos, 0):-
-    printRow(Subtree, RootGP),
+    printRow(Subtree, RootGP, CurrentPosition, ExtraSpace),
     getRightMostChild(Subtree, Child),
     Child = (LocalPos|_), NewPos is LocalPos + RootGP.
 
-printStem(Subtree, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace):-
-    printRowBottom(Subtree, RootGP),
-    getRightMostChild(Subtree, Child),
-    Child = (NewPos|_).
+printStem(Node, RootGP, CurrPos, ExtraSpace, RootGP, 1):- %For weights
+    isWeight(Node),
+    WS is RootGP - CurrPos - 1, writeRepeat('     ', WS),
+    Spaces is 3 - ExtraSpace, writeRepeat(' ', Spaces),
+    print('_|_').
+
+printStem(Node, RootGP, CurrPos, ExtraSpace, RootGP, 0):- %For Subtrees
+    WS is RootGP - CurrPos - 1, writeRepeat('     ', WS),
+    Spaces is 4 - ExtraSpace, writeRepeat(' ', Spaces),
+    print('|').
 
 %Prints a line of Subtrees and weights (Subtrees can be invalid and thus need to go down more)
 printLine([], _, _, List, List):- nl.
@@ -165,7 +144,9 @@ printLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList):- %If node 
 printLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList):- %If node is invalid Subtree
     append(TmpList, [Node/RootGP], NewTmpList),
     WS is RootGP - CurrPos - 1,
-    writeRepeat('     ', WS), print('    |'),
+    writeRepeat('     ', WS),
+    Space is 4 - ExtraSpace, writeRepeat(' ', Space),
+    print('|'),
     printLine(Rest, RootGP, 0, NewTmpList, NewList).
 
 addChildrenToList([], _, ResultList, ResultList).
@@ -175,31 +156,27 @@ addChildrenToList([Child|Rest], RootGP, TmpList, ResultList):-
     addChildrenToList(Rest, RootGP, NewTmp, ResultList).
 
 printLineBottom([], _, _):- nl.
-printLineBottom([Node/RootGP|Rest], CurrPos, ExtraSpace):-
-    printStem(Node, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
+printLineBottom([Node/NodeGP|Rest], CurrPos, ExtraSpace):-
+    printStem(Node, NodeGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
     printLineBottom(Rest, NewPos, NewExtraSpace).
+
+printTreeLoop([], _).
+printTreeLoop(Line, Margin):-
+    printMargin(Margin),
+    printLine(Line, -1, 2, [], NewLine),
+    printMargin(Margin),
+    printLineBottom(NewLine, -1, 2),
+    printTreeLoop(NewLine, Margin).
 
 %Main Function to print tree
 printTree:-
     complexTree(Tree),
-    Margin = 1,
+    Margin = 0,
     getLeftMostPosition(Tree, LeftMostValue),
     RootGlobalPosition is abs(LeftMostValue),
+    nl,
     printMargin(Margin),
     printRoot(RootGlobalPosition),
-
-    printMargin(Margin),
-    printLine([Tree/RootGlobalPosition], 0, 0, [], NewLine),
-    printMargin(Margin),
-    printLineBottom([Tree/RootGlobalPosition], 0, 0),
-    printMargin(Margin),
-    printLine(NewLine, 0, 0, [], _),
-    printMargin(Margin),
-    
-    printLineBottom(NewLine, 0, 0).
-
-   % printRow(Tree, RootGlobalPosition), %TODO Needs to change the 2nd argument here
-   % printMargin(Margin),
-   % printRowBottom(Tree, RootGlobalPosition). %TODO Needs to change the 2nd argument here
+    printTreeLoop([Tree/RootGlobalPosition], Margin).
 
 % consult('display.pl'), printTree.
