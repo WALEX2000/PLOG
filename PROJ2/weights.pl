@@ -91,7 +91,7 @@ validatePuzzle([Elem|Rest]):-
 makeRowDistinct([], Nodes):-
     all_distinct(Nodes),
     domain(Nodes, -8, 8), %position never outside these values
-    labeling([value(mySelValores)], Nodes).
+    labeling([value(mySelValores)], Nodes). %Search more into this, probably fails bcs 1st isn't negative
 makeRowDistinct([(Pos|_)|Rest], Nodes):-
     Nodes = [NextPos|_],
     Pos #> NextPos,
@@ -103,19 +103,16 @@ mySelValores(Var, _Rest, BB, BB1) :-
     fd_set(Var, Set),
     select_best_value(Set, Value),
     (   
-        first_bound(BB, BB1), Var #= Value
-        ;   
-        later_bound(BB, BB1), Var #\= Value
+        first_bound(BB, BB1), Var #= Value;   
+        later_bound(BB, BB1), Var #\= Value;
+        later_bound(BB, BB1), Var #= Value * -1
     ).
 
 select_best_value(Set, BestValue):-
     fdset_to_list(Set, Lista),
     length(Lista, Len),
-    Lista = [Elem|_],
-    LL is Elem + 1,
-    random(LL, Len, RandomIndex),
+    random(0, Len, RandomIndex),
     nth0(RandomIndex, Lista, BestValue).
-    
 
 %Create a puzzle and get its solution given a number of weights in that puzzle
 createPuzzle(Nweights, Puzzle, Solution):-
@@ -125,10 +122,12 @@ createPuzzle(Nweights, Puzzle, Solution):-
     treeWeightsList(Puzzle, Solution),
     getTotalWeight(Nweights, 0, TotalWeight),
     print('TW: '), print(TotalWeight), nl,
-    solveTree(Puzzle, TotalWeight),
     validatePuzzle(Puzzle),
     makeRowDistinct(Puzzle),
+    solveTree(Puzzle, TotalWeight),
     labeling([], Solution).
 
 % consult('weights.pl'), tree5(Tree), start(Tree, Weight).
 % consult('weights.pl'), createPuzzle(5, Puzzle, Solution), printTree(Puzzle).
+% consult('weights.pl'), createPuzzle(2, Puzzle, Solution), printTree(Puzzle).
+% consult('weights.pl'), createPuzzle(3, Puzzle, Solution), printTree(Puzzle).
