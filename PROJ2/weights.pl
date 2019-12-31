@@ -76,44 +76,45 @@ getTotalWeight(Nweights, Tmp, Total):-
     NewN is Nweights - 1,
     getTotalWeight(NewN, NewTmp, Total).
 
-validPuzzle([], 0, 0).
-validPuzzle([weight(Distance, Weight) | Puzzle], Torque, Total):-
-    NewTorque #= Torque + Distance * Weight,
-    validPuzzle(Puzzle, NewTorque, Subtotal),
-    Total #= Subtotal + Weight.
-
-validPuzzle([branch(Distance, Weights) | Puzzle], Torque, Total):-
-    validPuzzle(Weights, 0, BranchWeight),
-    NewTorque #= Torque + Distance * BranchWeight,
-    validPuzzle(Puzzle, NewTorque, Subtotal),
-    Total #= Subtotal + BranchWeight.
-
-validPuzzle(Puzzle):- validPuzzle(Puzzle, 0, _).
-
 validatePuzzle([], 0).
 validatePuzzle([Elem|Rest], TotalTorque):-
     Elem = (Pos|Weight),
     Torque #= Pos * Weight,
     NewTotal #= TotalTorque + Torque,
-    domain([Pos], -10, 10),
-    labeling([], [Pos]),
     validatePuzzle(Rest, NewTotal).
 
 validatePuzzle([Elem|Rest]):-
     Elem = (Pos|Weight),
     Torque #= Pos * Weight,
-    random(-10, 10, Pos),
-    domain([Pos], -10, 10),
-    labeling([], [Pos]),
     validatePuzzle(Rest, Torque).
 
-makeRowDistinct([], Nodes):- all_distinct(Nodes).
+makeRowDistinct([], Nodes):-
+    all_distinct(Nodes),
+    domain(Nodes, -8, 8), %position never outside these values
+    labeling([value(mySelValores)], Nodes).
 makeRowDistinct([(Pos|_)|Rest], Nodes):-
     Nodes = [NextPos|_],
     Pos #> NextPos,
     makeRowDistinct(Rest, [Pos|Nodes]).
 makeRowDistinct([(Pos|_)|Rest]):-
     makeRowDistinct(Rest, [Pos]).
+
+mySelValores(Var, _Rest, BB, BB1) :-
+    fd_set(Var, Set),
+    select_best_value(Set, Value),
+    (   
+        first_bound(BB, BB1), Var #= Value
+        ;   
+        later_bound(BB, BB1), Var #\= Value
+    ).
+
+select_best_value(Set, BestValue):-
+    fdset_to_list(Set, Lista),
+    length(Lista, Len),
+    Lista = [Elem|_],
+    LL is Elem + 1,
+    random(LL, Len, RandomIndex),
+    nth0(RandomIndex, Lista, BestValue).
     
 
 %Create a puzzle and get its solution given a number of weights in that puzzle
@@ -125,8 +126,8 @@ createPuzzle(Nweights, Puzzle, Solution):-
     getTotalWeight(Nweights, 0, TotalWeight),
     print('TW: '), print(TotalWeight), nl,
     solveTree(Puzzle, TotalWeight),
-    makeRowDistinct(Puzzle),
     validatePuzzle(Puzzle),
+    makeRowDistinct(Puzzle),
     labeling([], Solution).
 
 % consult('weights.pl'), tree5(Tree), start(Tree, Weight).
