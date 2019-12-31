@@ -112,7 +112,7 @@ printWeight(WeightValue, WeightGP, CurrentPosition, ExtraSpace, WeightGP, 2):-
     writeRepeat('     ', Offset),
     Space is 2 - ExtraSpace, writeRepeat(' ', Space),
     ((number(WeightValue), print('|'), print(WeightValue),
-      digits(WeightValue, Ndigits), S is 3 - Ndigits, writeRepeat(' ', S), print('|')); %TODO add whitespace to make up 3 spaces with numbers
+      digits(WeightValue, Ndigits), S is 3 - Ndigits, writeRepeat(' ', S), print('|'));
      (print('|???|'))). %Print node if it's unknown
 
 %For printing Subtrees
@@ -174,8 +174,7 @@ printTreeLoop(Line, Margin):-
     printTreeLoop(NewLine, Margin).
 
 %Main Function to print tree
-printTree:-
-    complexTree(Tree),
+printTree(Tree):-
     Margin = 1,
     getLeftMostPosition(Tree, LeftMostValue),
     RootGlobalPosition is abs(LeftMostValue),
@@ -184,4 +183,4 @@ printTree:-
     printRoot(RootGlobalPosition),
     printTreeLoop([Tree/RootGlobalPosition], Margin).
 
-% consult('display.pl'), printTree.
+% consult('display.pl'), complexTree(Tree), printTree(Tree).
