@@ -131,3 +131,4 @@ createPuzzle(Nweights, Puzzle, Solution):-
 % consult('weights.pl'), createPuzzle(5, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(2, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(3, Puzzle, Solution), printTree(Puzzle).
+% consult('weights.pl'), createPuzzle(15, Puzzle, Solution), printTree(Puzzle).

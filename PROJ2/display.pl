@@ -111,8 +111,8 @@ printWeight(WeightValue, WeightGP, CurrentPosition, ExtraSpace, WeightGP, 2):-
     Offset is WeightGP - CurrentPosition - 1,
     writeRepeat('     ', Offset),
     Space is 2 - ExtraSpace, writeRepeat(' ', Space),
-    ((number(WeightValue), print('|'), digits(WeightValue, Ndigits), S is 3 - Ndigits, FS is floor(S/2),
-      writeRepeat(' ', FS), print(WeightValue), LS is S - FS, writeRepeat(' ', LS), print('|'));
+    ((number(WeightValue), print('|'), digits(WeightValue, Ndigits), S is 3 - Ndigits, FS is floor(S/2), LS is S - FS,
+      writeRepeat(' ', LS), print(WeightValue), writeRepeat(' ', FS), print('|'));
      (print('|???|'))). %Print node if it's unknown
 
 %For printing Subtrees
