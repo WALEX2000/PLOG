@@ -36,12 +36,12 @@ treeWeight([(_|Node)|Rest], Weight):-
     treeWeight(Rest, NewWeight).
 
 treeWeightsList([], []).
-treeWeightsList([(_|Subtree)|Rest], TotalWeights):-
+treeWeightsList([(_|Subtree)|Rest], TotalWeights):- %For subtrees
     is_list(Subtree),
     treeWeightsList(Subtree, SubtreeWeights),
     append(SubtreeWeights, Weights, TotalWeights),
     treeWeightsList(Rest, Weights).
-treeWeightsList([(_|Node)|Rest], [Node|RestWeights]):-
+treeWeightsList([(_|Node)|Rest], [Node|RestWeights]):- %For regular weights
     (\+is_list(Node)),
     treeWeightsList(Rest, RestWeights).
 
@@ -65,39 +65,36 @@ getNodeTorque(Pos, Subtree, Torque):-
     solveTree(Subtree, SubtreeWeight),
     Torque #= abs(Pos) * SubtreeWeight.
 
-sumAll([], Total, Total).
-sumAll([Elem|Rest], Tmp, Total):-
-    NewTmp #= Tmp + Elem,
-    sumAll(Rest, NewTmp, Total).
-
 getTotalWeight(0, Total, Total).
 getTotalWeight(Nweights, Tmp, Total):-
     NewTmp is Tmp + Nweights,
     NewN is Nweights - 1,
     getTotalWeight(NewN, NewTmp, Total).
 
-validatePuzzle([], 0).
-validatePuzzle([Elem|Rest], TotalTorque):-
-    Elem = (Pos|Weight),
-    Torque #= Pos * Weight,
-    NewTotal #= TotalTorque + Torque,
-    validatePuzzle(Rest, NewTotal).
+labelNextSubtree([]).
+labelNextSubtree([(_|Node)|Rest]):-
+    is_list(Node),
+    labelRow(Node),
+    labelNextSubtree(Node),
+    labelNextSubtree(Rest).
+labelNextSubtree([(_|Node)|Rest]):- labelNextSubtree(Rest).
 
-validatePuzzle([Elem|Rest]):-
-    Elem = (Pos|Weight),
-    Torque #= Pos * Weight,
-    validatePuzzle(Rest, Torque).
+labelPuzzlePos([]).
+labelPuzzlePos(Puzzle):-
+    labelRow(Puzzle),
+    labelNextSubtree(Puzzle).
 
-makeRowDistinct([], Nodes):-
+labelRow([], Nodes):-
     all_distinct(Nodes),
-    domain(Nodes, -8, 8), %position never outside these values
-    labeling([value(mySelValores)], Nodes). %Search more into this, probably fails bcs 1st isn't negative
-makeRowDistinct([(Pos|_)|Rest], Nodes):-
-    Nodes = [NextPos|_],
-    Pos #> NextPos,
-    makeRowDistinct(Rest, [Pos|Nodes]).
-makeRowDistinct([(Pos|_)|Rest]):-
-    makeRowDistinct(Rest, [Pos]).
+    domain(Nodes, -8, 8), %Change to increase row range
+    labeling([value(mySelValores)], Nodes).
+labelRow([(Pos|_)|Rest], Nodes):-
+    Nodes = [PrevPos|_],
+    Pos #> PrevPos,
+    labelRow(Rest, [Pos|Nodes]).
+
+labelRow([(Pos|_)|Rest]):-
+    labelRow(Rest, [Pos]).
 
 mySelValores(Var, _Rest, BB, BB1) :-
     fd_set(Var, Set),
@@ -114,21 +111,84 @@ select_best_value(Set, BestValue):-
     random(0, Len, RandomIndex),
     nth0(RandomIndex, Lista, BestValue).
 
+%Go through every node in list and turn into a weight or a sublist
+assignForm([], Remaining, Remaining).
+assignForm([(_|Node)|Rest], Remaining, NewRemaining):-
+    (Remaining > 0, random(0,2, Choice), %If subtrees are still needed choose randomly between Subtree or weight
+     (
+      (Choice = 0, assignForm(Rest, Remaining, NewRemaining)); %In case of weight just go to the next node on this row
+      (Choice = 1, Node = [_], Rem is Remaining - 1, assignForm(Rest, Rem, NewRemaining)) %If case of subtree create list, sub to Remaining and go to next node
+     )
+    );
+    (Remaining = 0, assignForm(Rest, Remaining, NewRemaining)); %If subtrees aren't needed just leave as weight
+    (Remaining > 0, Node = [_], Rem is Remaining - 1, assignForm(Rest, Rem, NewRemaining)). %In the rare case that random only selected weights but subtrees are still needed.
+
+getNextLine([], []).
+getNextLine([(_|Node)|Rest], NewLine):-
+    (is_list(Node), Node = [SubTree], NewLine = [SubTree|Other], getNextLine(Rest, Other)); %If node is a subTree
+    (Node = _, getNextLine(Rest, NewLine)). %If node is a weight
+getNextLine([List|Rest], NewLine):- %If we get a list of lists
+    getNextLine(List, LinePart),
+    getNextLine(Rest, Other),
+    append(LinePart, Other, NewLine).
+
+generateStructure([], NextLineRemaining, NextLineRemaining).
+generateStructure([SubTree|Rest], Nweights, NextLineRemaining):-
+    N is Nweights + 2,
+    Tmp is N + 1,
+    random(2, Tmp, Nnodes), %Create a random amount of nodes
+    length(SubTree, Nnodes), %Turn Subtree Node into a list with Nnodes
+    Remaining is N - Nnodes,
+    assignForm(SubTree, Remaining, NewRemaining), %NewRemaining accounts for sublists
+    generateStructure(Rest, NewRemaining, NextLineRemaining).
+
+%Ends when next line is empty and remaining = 0
+generateNextLine([], 0).
+generateNextLine(Puzzle, WeightsNeeded):-
+    length(Puzzle, L), L > 0,
+    generateStructure(Puzzle, WeightsNeeded, NextLineWeightsNeeded),
+    getNextLine(Puzzle, NextLine),
+    generateNextLine(NextLine, NextLineWeightsNeeded).
+
+%Create a valid randomly created structure for our puzzle
+generateStructure(Puzzle, Nweights):-
+    Tmp is Nweights + 1,
+    random(2, Tmp, Nnodes), %Create a random amount of nodes
+    length(Puzzle, Nnodes), %Turn Puzzle into a list of Nnodes
+    Remaining is Nweights - Nnodes,
+    assignForm(Puzzle, Remaining, NewRemaining), %NewRemaining accounts for sublists
+    getNextLine(Puzzle, NextLine),
+    generateNextLine(NextLine, NewRemaining).
+
+rectifyNode((_|Val), NewNode):- %If it is a list
+    is_list(Val), Val = [NL],
+    removeDoubleLists(NL, RectifiedList),
+    NewNode = (_|RectifiedList).
+rectifyNode(N, N).
+
+removeDoubleLists([], []).
+removeDoubleLists([Node|Rest], Puzzle):-
+    rectifyNode(Node, NewNode),
+    Puzzle = [NewNode|OtherNodes],
+    removeDoubleLists(Rest, OtherNodes).
+
 %Create a puzzle and get its solution given a number of weights in that puzzle
 createPuzzle(Nweights, Puzzle, Solution):-
     length(Solution, Nweights), %set size of Solution
     domain(Solution, 1, Nweights), %set domain of solution
     all_distinct(Solution), %specify solution is distinct
-    treeWeightsList(Puzzle, Solution),
     getTotalWeight(Nweights, 0, TotalWeight),
-    print('TW: '), print(TotalWeight), nl,
-    validatePuzzle(Puzzle),
-    makeRowDistinct(Puzzle),
-    solveTree(Puzzle, TotalWeight),
+    generateStructure(TmpPuzzle, Nweights), %Generate puzzle structure
+    removeDoubleLists(TmpPuzzle, Puzzle), %Remove double lists inserted in generate puzzle (No other way around this)
+    treeWeightsList(Puzzle, Solution), %Bind solution to puzzle nodes
+    labelPuzzlePos(Puzzle),
+    solveTree(Puzzle, TotalWeight), %assign weight to those positions
     labeling([], Solution).
 
 % consult('weights.pl'), tree5(Tree), start(Tree, Weight).
+% consult('weights.pl'), tree8(Tree), start(Tree, Weight).
 % consult('weights.pl'), createPuzzle(5, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(2, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(3, Puzzle, Solution), printTree(Puzzle).
+% consult('weights.pl'), createPuzzle(4, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(15, Puzzle, Solution), printTree(Puzzle).

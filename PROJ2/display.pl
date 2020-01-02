@@ -164,9 +164,32 @@ printLineBottom([Node/NodeGP|Rest], CurrPos, ExtraSpace):-
     printStem(Node, NodeGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
     printLineBottom(Rest, NewPos, NewExtraSpace).
 
+checkWithOthers(Elem, [OtherElem|Rest], Tmp, Difference):-
+    Elem = (RootPos, LeftChildPos, RightChildPos),
+    OtherElem = (OtherRootPos, OtherLeftChildPos, OtherRightChildPos).
+    
+
+%Checks if the subTrees in this line are impossible (ListOfSubtrees is in format [(RootPos, LeftChildPos, RightChildPos)])
+checkImpossibility([], [Elem1|OtherElems], MultFactor).
+    %Check If Elem1 has impossibility with OtherElems
+
+
+%Return MultFactor accordingly 1st Arg is [[ListOfNodes]/RootGP, ...]
+checkImpossibility([SubTree/RootGP|OtherSubTrees], ListOfSubTrees, MultFactor):-
+    SubTree = [(RootPos|Val)|OtherNodes],
+    is_list(Val), %If is subTree
+    getRightMostChild(Val, (RightMostPos|_)),
+    Val = [(LeftMostPos|_)],
+    NewListOfSubTrees = [(RootPos, LeftMostPos, RightMostPos)|ListOfSubTrees],
+    checkImpossibility(OtherNodes/RootGP, NewListOfSubTrees, MultFactor).
+    %Needs to look at all the subtrees in this line, and get their rightMost and LeftMost Positions
+    %If any of their absolute positions are in conflict with each other's roots then rectify this by multiplying every root position by x
+
 %Loop for printing entire tree
 printTreeLoop([], _).
 printTreeLoop(Line, Margin):-
+    %checkImpossibility(Line, [], CheckedLine),
+    %Check if line will lead to impossible situations down the line and adjust position accordingly
     printMargin(Margin),
     printLine(Line, -1, 2, [], NewLine),
     printMargin(Margin),
