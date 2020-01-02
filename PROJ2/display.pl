@@ -237,7 +237,7 @@ runLineBottom([Node/NodeGP|Rest], CurrPos, ExtraSpace):-
 runTreeLoop([], -1).
 runTreeLoop(Line, SpacesToMult):-
     runLine(Line, -1, 2, [], NewLine, WS),
-    ((number(WS), WS < 0, SpacesToMult is WS * 5, print(NewLine));
+    ((number(WS), WS < 0, SpacesToMult is WS * 5);
      (runLineBottom(NewLine, -1, 2),
      runTreeLoop(NewLine, SpacesToMult))).
 
