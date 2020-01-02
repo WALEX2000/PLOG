@@ -148,6 +148,7 @@ printLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList):- %If node 
 printLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList):- %If node is invalid Subtree
     append(TmpList, [Node/RootGP], NewTmpList),
     WS is RootGP - CurrPos - 1,
+    %trace,
     writeRepeat('     ', WS),
     Space is 4 - ExtraSpace, writeRepeat(' ', Space),
     print('|'),
@@ -164,27 +165,6 @@ printLineBottom([Node/NodeGP|Rest], CurrPos, ExtraSpace):-
     printStem(Node, NodeGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
     printLineBottom(Rest, NewPos, NewExtraSpace).
 
-checkWithOthers(Elem, [OtherElem|Rest], Tmp, Difference):-
-    Elem = (RootPos, LeftChildPos, RightChildPos),
-    OtherElem = (OtherRootPos, OtherLeftChildPos, OtherRightChildPos).
-    
-
-%Checks if the subTrees in this line are impossible (ListOfSubtrees is in format [(RootPos, LeftChildPos, RightChildPos)])
-checkImpossibility([], [Elem1|OtherElems], MultFactor).
-    %Check If Elem1 has impossibility with OtherElems
-
-
-%Return MultFactor accordingly 1st Arg is [[ListOfNodes]/RootGP, ...]
-checkImpossibility([SubTree/RootGP|OtherSubTrees], ListOfSubTrees, MultFactor):-
-    SubTree = [(RootPos|Val)|OtherNodes],
-    is_list(Val), %If is subTree
-    getRightMostChild(Val, (RightMostPos|_)),
-    Val = [(LeftMostPos|_)],
-    NewListOfSubTrees = [(RootPos, LeftMostPos, RightMostPos)|ListOfSubTrees],
-    checkImpossibility(OtherNodes/RootGP, NewListOfSubTrees, MultFactor).
-    %Needs to look at all the subtrees in this line, and get their rightMost and LeftMost Positions
-    %If any of their absolute positions are in conflict with each other's roots then rectify this by multiplying every root position by x
-
 %Loop for printing entire tree
 printTreeLoop([], _).
 printTreeLoop(Line, Margin):-
@@ -196,14 +176,90 @@ printTreeLoop(Line, Margin):-
     printLineBottom(NewLine, -1, 2),
     printTreeLoop(NewLine, Margin).
 
+runLine([], _, _, List, List, _).
+runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, _):- %If Node is weight
+    isWeight(Node),
+    runWeight(Node, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
+    runLine(Rest, NewPos, NewExtraSpace, TmpList, NewList, _).
+
+runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, WS):- %If node is Valid Subtree
+    checkIfSubtreeValid(Node/RootGP, CurrPos, Rest),
+    addChildrenToList(Node, RootGP, TmpList, NewTmpList),
+    runNode(Node, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace, WS),
+    runLine(Rest, NewPos, NewExtraSpace, NewTmpList, NewList, WS).
+
+runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, WS):- %If node is invalid Subtree
+    WS is RootGP - CurrPos - 1,
+    append(TmpList, [Node/RootGP], NewTmpList),
+    runLine(Rest, RootGP, 0, NewTmpList, NewList, WS).
+
+runWeight(WeightValue, WeightGP, CurrentPosition, ExtraSpace, WeightGP, 2).
+
+%For printing Subtrees
+runNode(Subtree, RootGP, CurrentPosition, ExtraSpace, NewPos, 0, WS):-
+    Subtree = [(FirstPos|_)|_], FirstGP is RootGP + FirstPos,
+    WS is FirstGP - CurrentPosition - 1, WS < 0.
+
+%For printing Subtrees
+runNode(Subtree, RootGP, CurrentPosition, ExtraSpace, NewPos, 0, _):-
+    getRightMostChild(Subtree, Child),
+    Child = (LocalPos|_), NewPos is LocalPos + RootGP.
+
+%ELIMINATE IF GOOD
+runRow([Elem|Rest], RootGP, CurrPos, ExtraSpace):-
+    Elem = (FirstPos|_),
+    FirstGP is RootGP + FirstPos,
+    WS is FirstGP - CurrPos - 1,
+    writeRepeat('     ', WS),
+    Space is 4 - ExtraSpace, writeRepeat(' ', Space),
+    print('+'),
+    runRowRest(Rest, FirstPos).
+
+runRowRest([], _).
+runRowRest([Elem|Rest], LastPos):-
+    Elem = (CurrPos|_),
+    Spaces is CurrPos - LastPos - 1,
+    writeRepeat('----|', Spaces),
+    print('----+'),
+    printRowRest(Rest, CurrPos).
+
+runStem(Node, RootGP, CurrPos, ExtraSpace, RootGP, 1):- %For weights
+    isWeight(Node).
+
+runStem(_, RootGP, CurrPos, ExtraSpace, RootGP, 0).
+
+runLineBottom([], _, _):- nl.
+runLineBottom([Node/NodeGP|Rest], CurrPos, ExtraSpace):-
+    runStem(Node, NodeGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
+    runLineBottom(Rest, NewPos, NewExtraSpace).
+
+%Used to check if there's an impossible print happening
+runTreeLoop([], -1).
+runTreeLoop(Line, SpacesToMult):-
+    runLine(Line, -1, 2, [], NewLine, WS),
+    ((number(WS), WS < 0, SpacesToMult is WS * 5, print(NewLine));
+     (runLineBottom(NewLine, -1, 2),
+     runTreeLoop(NewLine, SpacesToMult))).
+
+multTree([], _, []).
+multTree([(Pos|Node)|Rest], Mult, NewTree):-
+    NewPos is Pos * -Mult,
+    NewTree = [(NewPos|Node)|Others],
+    multTree(Rest, Mult, Others).
+
 %Main Function to print tree
 printTree(Tree):-
     Margin = 1,
     getLeftMostPosition(Tree, LeftMostValue),
     RootGlobalPosition is abs(LeftMostValue),
+    runTreeLoop([Tree/RootGlobalPosition], Mult),
+    multTree(Tree, Mult, NewTree),
+
+    getLeftMostPosition(NewTree, NewLeftMostValue),
+    NewRootGlobalPosition is abs(NewLeftMostValue),
     nl,
     printMargin(Margin),
-    printRoot(RootGlobalPosition),
-    printTreeLoop([Tree/RootGlobalPosition], Margin).
+    printRoot(NewRootGlobalPosition),
+    printTreeLoop([NewTree/NewRootGlobalPosition], Margin).
 
 % consult('display.pl'), complexTree(Tree), printTree(Tree).
