@@ -20,8 +20,8 @@ start(Tree, Weight):-
     nl.
 
 solveTree(Tree, Weight):-
-    getTorques(Tree, PosTorque, NegTorque),
-    PosTorque #= NegTorque,
+    getTorques(Tree, Torque),
+    Torque #= 0,
     treeWeight(Tree, Weight).
 
 treeWeight([], 0).
@@ -45,25 +45,19 @@ treeWeightsList([(_|Node)|Rest], [Node|RestWeights]):- %For regular weights
     (\+is_list(Node)),
     treeWeightsList(Rest, RestWeights).
 
-getTorques([], 0, 0).
-getTorques([(Pos|Node)|Rest], PosTorque, NegTorque):-
-    Pos#>0,
+getTorques([], 0).
+getTorques([(Pos|Node)|Rest], Torque):-
     getNodeTorque(Pos, Node, NodeTorque),
-    NewPosTorque #= PosTorque - NodeTorque,
-    getTorques(Rest, NewPosTorque, NegTorque).
-getTorques([(Pos|Node)|Rest], PosTorque, NegTorque):-
-    Pos#<0,
-    getNodeTorque(Pos, Node, NodeTorque),
-    NewNegTorque #= NegTorque - NodeTorque,
-    getTorques(Rest, PosTorque, NewNegTorque).
+    NewTorque #= Torque - NodeTorque,
+    getTorques(Rest, NewTorque).
 
 getNodeTorque(Pos, Value, Torque):-
     (\+is_list(Value)),
-    Torque #= abs(Pos) * Value.
+    Torque #= Pos * Value.
 getNodeTorque(Pos, Subtree, Torque):-
     is_list(Subtree),
     solveTree(Subtree, SubtreeWeight),
-    Torque #= abs(Pos) * SubtreeWeight.
+    Torque #= Pos * SubtreeWeight.
 
 getTotalWeight(0, Total, Total).
 getTotalWeight(Nweights, Tmp, Total):-
