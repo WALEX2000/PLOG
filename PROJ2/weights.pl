@@ -6,17 +6,19 @@
 
 
 start(Tree, Weight):-
+    reset_timer,
     printTree(Tree), %Print the puzzle without solution
     treeWeightsList(Tree, Weights),
     length(Weights, Length),
     domain(Weights,1,Length),
     all_distinct(Weights),
     solveTree(Tree, Weight),!,
-    labeling([], Weights),
+    labeling([ffc], Weights),
     print('================================================================================='), nl,
     printTree(Tree), %Print the puzzle with solution
     write('Weights: '),
     write(Weights),
+    print_time,
     nl.
 
 solveTree(Tree, Weight):-
@@ -191,3 +193,9 @@ createPuzzle(Nweights, Puzzle, Solution):-
 % consult('weights.pl'), createPuzzle(15, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(20, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(8, Puzzle, Solution), printTree(Puzzle).
+
+reset_timer :- statistics(walltime,_).	
+print_time :-
+	statistics(walltime,[_,T]),
+	TS is ((T//10)*10)/1000,
+	nl, write('Time: '), write(TS), write('s ('), write(T), write('ms)'), nl, nl.
