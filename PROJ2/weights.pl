@@ -80,7 +80,7 @@ labelPuzzlePos(Puzzle):-
     labelRow(Puzzle),
     labelNextSubtree(Puzzle).
 
-labelRow([], Nodes):- domain(Nodes, -6, 6).
+labelRow([], Nodes):- length(Nodes, Length), NegLength is Length * -1, domain(Nodes, NegLength, Length).
 labelRow([(Pos|_)|Rest], Nodes):-
     Nodes = [PrevPos|_],
     Pos #> PrevPos,
@@ -171,11 +171,15 @@ createPuzzle(Nweights, Puzzle, Solution):-
     generateStructure(TmpPuzzle, Nweights), %Generate puzzle structure
     removeDoubleLists(TmpPuzzle, Puzzle), %Remove double lists inserted in generate puzzle (No other way around this)
     treeWeightsList(Puzzle, Solution), %Bind solution to puzzle nodes
-    solveTree(Puzzle, TotalWeight), %assign restrictions
     labelPuzzlePos(Puzzle), %assign further restrictions
+    solveTree(Puzzle, TotalWeight), %assign restrictions
+    print(Puzzle), nl,
+    %labelPuzzlePos(Puzzle), %assign further restrictions
+    print('Oi2'), nl,
     getPuzzlePositions(Puzzle, Pos), %get all positions and append to solution
     append(Solution, Pos, Vars),
-    labeling([bisect], Vars).
+    print('Oi3'), nl,
+    labeling([bisect, ffc], Vars).
 
 % consult('weights.pl'), tree5(Tree), start(Tree, Weight).
 % consult('weights.pl'), tree8(Tree), start(Tree, Weight).
@@ -185,4 +189,5 @@ createPuzzle(Nweights, Puzzle, Solution):-
 % consult('weights.pl'), createPuzzle(3, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(4, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(15, Puzzle, Solution), printTree(Puzzle).
+% consult('weights.pl'), createPuzzle(20, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(8, Puzzle, Solution), printTree(Puzzle).
