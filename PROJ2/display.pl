@@ -168,8 +168,6 @@ printLineBottom([Node/NodeGP|Rest], CurrPos, ExtraSpace):-
 %Loop for printing entire tree
 printTreeLoop([], _).
 printTreeLoop(Line, Margin):-
-    %checkImpossibility(Line, [], CheckedLine),
-    %Check if line will lead to impossible situations down the line and adjust position accordingly
     printMargin(Margin),
     printLine(Line, -1, 2, [], NewLine),
     printMargin(Margin),
@@ -182,26 +180,31 @@ runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, _):- %If Node
     runWeight(Node, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
     runLine(Rest, NewPos, NewExtraSpace, TmpList, NewList, _).
 
-runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, WS):- %If node is Valid Subtree
+runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, _):- %If node is Valid Subtree
     checkIfSubtreeValid(Node/RootGP, CurrPos, Rest),
     addChildrenToList(Node, RootGP, TmpList, NewTmpList),
     runNode(Node, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace, WS),
     runLine(Rest, NewPos, NewExtraSpace, NewTmpList, NewList, WS).
 
-runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, WS):- %If node is invalid Subtree
+runLine([Node/RootGP|Rest], CurrPos, _, TmpList, NewList, Node/RootGP):- %If node is invalid Subtree
+    WS is RootGP - CurrPos - 1, WS < 0
+    append(TmpList, [Node/RootGP], NewTmpList),
+    runLine(Rest, RootGP, 0, NewTmpList, NewList, WS).
+
+runLine([Node/RootGP|Rest], CurrPos, _, TmpList, NewList, WS):- %If node is invalid Subtree
     WS is RootGP - CurrPos - 1,
     append(TmpList, [Node/RootGP], NewTmpList),
     runLine(Rest, RootGP, 0, NewTmpList, NewList, WS).
 
-runWeight(WeightValue, WeightGP, CurrentPosition, ExtraSpace, WeightGP, 2).
+runWeight(_, WeightGP, _, _, WeightGP, 2).
 
 %For printing Subtrees
-runNode(Subtree, RootGP, CurrentPosition, ExtraSpace, NewPos, 0, WS):-
+runNode(Subtree, RootGP, CurrentPosition, _, _, 0, WS):-
     Subtree = [(FirstPos|_)|_], FirstGP is RootGP + FirstPos,
     WS is FirstGP - CurrentPosition - 1, WS < 0.
 
 %For printing Subtrees
-runNode(Subtree, RootGP, CurrentPosition, ExtraSpace, NewPos, 0, _):-
+runNode(Subtree, RootGP, _, _, NewPos, 0, _):-
     getRightMostChild(Subtree, Child),
     Child = (LocalPos|_), NewPos is LocalPos + RootGP.
 
@@ -223,21 +226,21 @@ runRowRest([Elem|Rest], LastPos):-
     print('----+'),
     printRowRest(Rest, CurrPos).
 
-runStem(Node, RootGP, CurrPos, ExtraSpace, RootGP, 1):- %For weights
+runStem(Node, RootGP, _, _, RootGP, 1):- %For weights
     isWeight(Node).
 
-runStem(_, RootGP, CurrPos, ExtraSpace, RootGP, 0).
+runStem(_, RootGP, _, _, RootGP, 0).
 
-runLineBottom([], _, _):- nl.
+runLineBottom([], _, _).
 runLineBottom([Node/NodeGP|Rest], CurrPos, ExtraSpace):-
     runStem(Node, NodeGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
     runLineBottom(Rest, NewPos, NewExtraSpace).
 
 %Used to check if there's an impossible print happening
-runTreeLoop([], -1).
-runTreeLoop(Line, SpacesToMult):-
-    runLine(Line, -1, 2, [], NewLine, WS),
-    ((number(WS), WS < 0, SpacesToMult is WS * 5);
+runTreeLoop([], _).
+runTreeLoop(Line, InvalidSubTree):-
+    runLine(Line, -1, 2, [], NewLine, InvalidSubTree),
+    ((\+var(InvalidSubTree));
      (runLineBottom(NewLine, -1, 2),
      runTreeLoop(NewLine, SpacesToMult))).
 
@@ -247,14 +250,20 @@ multTree([(Pos|Node)|Rest], Mult, NewTree):-
     NewTree = [(NewPos|Node)|Others],
     multTree(Rest, Mult, Others).
 
+findParentTree(Tree, InvalidSubTree, ParentTree):-
+    
+
+correctTree(Tree, NewTree):-
+    getLeftMostPosition(Tree, LeftMostValue),
+    RootGlobalPosition is abs(LeftMostValue),
+    runTreeLoop([Tree/RootGlobalPosition], InvalidSubTree),
+    ((var(InvalidSubTree), NewTree = Tree);
+     (findParentTree(Tree, InvalidSubTree, ParentTree) multTree(Tree, Mult, BetterTree), correctTree(BetterTree, NewTree))).
+
 %Main Function to print tree
 printTree(Tree):-
     Margin = 1,
-    getLeftMostPosition(Tree, LeftMostValue),
-    RootGlobalPosition is abs(LeftMostValue),
-    runTreeLoop([Tree/RootGlobalPosition], Mult),
-    multTree(Tree, Mult, NewTree),
-
+    correctTree(Tree, NewTree),
     getLeftMostPosition(NewTree, NewLeftMostValue),
     NewRootGlobalPosition is abs(NewLeftMostValue),
     nl,

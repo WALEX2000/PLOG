@@ -36,13 +36,15 @@ treeWeight([(_|Node)|Rest], Weight):-
     treeWeight(Rest, NewWeight).
 
 treeWeightsList([], []).
-treeWeightsList([(_|Subtree)|Rest], TotalWeights):- %For subtrees
+treeWeightsList([(Pos|Subtree)|Rest], TotalWeights):- %For subtrees
     is_list(Subtree),
+    Pos #\= 0,
     treeWeightsList(Subtree, SubtreeWeights),
     append(SubtreeWeights, Weights, TotalWeights),
     treeWeightsList(Rest, Weights).
-treeWeightsList([(_|Node)|Rest], [Node|RestWeights]):- %For regular weights
+treeWeightsList([(Pos|Node)|Rest], [Node|RestWeights]):- %For regular weights
     (\+is_list(Node)),
+    Pos #\= 0,
     treeWeightsList(Rest, RestWeights).
 
 getTorques([], 0).
@@ -71,17 +73,14 @@ labelNextSubtree([(_|Node)|Rest]):-
     labelRow(Node),
     labelNextSubtree(Node),
     labelNextSubtree(Rest).
-labelNextSubtree([(_|Node)|Rest]):- labelNextSubtree(Rest).
+labelNextSubtree([(_|_)|Rest]):- labelNextSubtree(Rest).
 
 labelPuzzlePos([]).
 labelPuzzlePos(Puzzle):-
     labelRow(Puzzle),
     labelNextSubtree(Puzzle).
 
-labelRow([], Nodes):-
-    all_distinct(Nodes),
-    domain(Nodes, -8, 8), %Change to increase row range
-    labeling([value(mySelValores)], Nodes).
+labelRow([], Nodes):- domain(Nodes, -6, 6).
 labelRow([(Pos|_)|Rest], Nodes):-
     Nodes = [PrevPos|_],
     Pos #> PrevPos,
@@ -89,21 +88,6 @@ labelRow([(Pos|_)|Rest], Nodes):-
 
 labelRow([(Pos|_)|Rest]):-
     labelRow(Rest, [Pos]).
-
-mySelValores(Var, _Rest, BB, BB1) :-
-    fd_set(Var, Set),
-    select_best_value(Set, Value),
-    (   
-        first_bound(BB, BB1), Var #= Value;   
-        later_bound(BB, BB1), Var #\= Value;
-        later_bound(BB, BB1), Var #= Value * -1
-    ).
-
-select_best_value(Set, BestValue):-
-    fdset_to_list(Set, Lista),
-    length(Lista, Len),
-    random(0, Len, RandomIndex),
-    nth0(RandomIndex, Lista, BestValue).
 
 %Go through every node in list and turn into a weight or a sublist
 assignForm([], Remaining, Remaining).
@@ -166,6 +150,18 @@ removeDoubleLists([Node|Rest], Puzzle):-
     Puzzle = [NewNode|OtherNodes],
     removeDoubleLists(Rest, OtherNodes).
 
+getPuzzlePositions([], []).
+getPuzzlePositions([(Pos|Node)|Rest], PosList):-
+    \+isWeight(Node),
+    PosList = [Pos|List],
+    getPuzzlePositions(Node, DepthList),
+    getPuzzlePositions(Rest, NextList),
+    append(DepthList, NextList, List).
+getPuzzlePositions([(Pos|Node)|Rest], PosList):-
+    isWeight(Node),
+    PosList = [Pos|List],
+    getPuzzlePositions(Rest, List).
+
 %Create a puzzle and get its solution given a number of weights in that puzzle
 createPuzzle(Nweights, Puzzle, Solution):-
     length(Solution, Nweights), %set size of Solution
@@ -175,14 +171,18 @@ createPuzzle(Nweights, Puzzle, Solution):-
     generateStructure(TmpPuzzle, Nweights), %Generate puzzle structure
     removeDoubleLists(TmpPuzzle, Puzzle), %Remove double lists inserted in generate puzzle (No other way around this)
     treeWeightsList(Puzzle, Solution), %Bind solution to puzzle nodes
-    labelPuzzlePos(Puzzle),
-    solveTree(Puzzle, TotalWeight), %assign weight to those positions
-    labeling([], Solution).
+    solveTree(Puzzle, TotalWeight), %assign restrictions
+    labelPuzzlePos(Puzzle), %assign further restrictions
+    getPuzzlePositions(Puzzle, Pos), %get all positions and append to solution
+    append(Solution, Pos, Vars),
+    labeling([bisect], Vars).
 
 % consult('weights.pl'), tree5(Tree), start(Tree, Weight).
 % consult('weights.pl'), tree8(Tree), start(Tree, Weight).
+% consult('weights.pl'), testTree(Tree), start(Tree, Weight).
 % consult('weights.pl'), createPuzzle(5, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(2, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(3, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(4, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(15, Puzzle, Solution), printTree(Puzzle).
+% consult('weights.pl'), createPuzzle(8, Puzzle, Solution), printTree(Puzzle).
