@@ -3,19 +3,19 @@
 
 %Gets the biggest amount of spacing necessary (for root)
 getLeftMostPosition(Tree, LeftMostValue):-
-    %trace,
     depthSearch(Tree, 0, LeftMostValue).
 
-depthSearch([], _, 0).
 %In case we called depthSearch on a Leaf
-depthSearch(NotAList, Tmp, Tmp):- \+is_list(NotAList).
+depthSearch(NotAList, Tmp, Tmp):- isWeight(NotAList).
+depthSearch([], _, 0).
 %DFS search
 depthSearch([FirstElem|Rest], Tmp, LeftMostValue):-
     FirstElem = (Pos|Children),
     NewTmp is Tmp + Pos,
     depthSearch(Children, NewTmp, LeftMostTmp),
     depthSearch(Rest, Tmp, OthersLeftMostTmp),
-    LeftMostValue = min(LeftMostTmp, OthersLeftMostTmp).
+    ((LeftMostTmp @< OthersLeftMostTmp, LeftMostValue = LeftMostTmp);
+     (LeftMostValue = OthersLeftMostTmp)).
 
 %Writes a Char a Total number of times
 writeRepeat(_, Num):- Num @< 1.
@@ -218,7 +218,9 @@ runLineBottom([Node/NodeGP|Rest], CurrPos, ExtraSpace):-
 
 %Used to check if child belong to a subTree
 checkIfChild([(_|ChildNode)|_], Child):- \+isWeight(ChildNode), Child = ChildNode.
-checkIfChild([_|Rest], Child):-
+checkIfChild(SubTree, Child):-
+    \+isWeight(SubTree),
+    SubTree = [_|Rest],
     checkIfChild(Rest, Child).
 
 %Used to get the Parent Tree
@@ -235,7 +237,7 @@ runTreeLoop([], _, _, _).
 runTreeLoop(Line, InvalidSubTree, ParentTree, NewParentTree):-
     \+var(InvalidSubTree);
     (runLine(Line, -1, 2, [], NewLine, InvalidSubTree), runLineBottom(NewLine, -1, 2),
-     runTreeLoop(NewLine, InvalidSubTree, ParentTree, NewParentTree),
+     runTreeLoop(NewLine, InvalidSubTree, ParentTree, NewParentTree), %trace,
      ( var(InvalidSubTree); %No problems
       (\+var(ParentTree)); %Already found Parent
       (\+var(InvalidSubTree), getParentTree(InvalidSubTree, Line, ParentTree, NewParentTree)) %Get Parent
@@ -267,8 +269,8 @@ correctTree(Tree, NewTree):-
 %Main Function to print tree
 printTree(Tree):-
     nl, print('Display:  '), print(Tree), nl,
-    Margin = 1,
-    correctTree(Tree, NewTree),
+    Margin = 1, %trace,
+    correctTree(Tree, NewTree), print('Oi oi?'), nl,
     getLeftMostPosition(NewTree, NewLeftMostValue),
     NewRootGlobalPosition is abs(NewLeftMostValue),
     nl,

@@ -173,10 +173,9 @@ createPuzzle(Nweights, Puzzle, Solution):-
     generateStructure(TmpPuzzle, Nweights), %Generate puzzle structure
     removeDoubleLists(TmpPuzzle, Puzzle), %Remove double lists inserted in generate puzzle (No other way around this)
     treeWeightsList(Puzzle, Solution), %Bind solution to puzzle nodes
-    labelPuzzlePos(Puzzle), %assign further restrictions
+    labelPuzzlePos(Puzzle), %assign restrictions to position
     solveTree(Puzzle, TotalWeight), %assign restrictions
     print(Puzzle), nl,
-    %labelPuzzlePos(Puzzle), %assign further restrictions
     print('Oi2'), nl,
     getPuzzlePositions(Puzzle, Pos), %get all positions and append to solution
     append(Solution, Pos, Vars),
@@ -185,7 +184,8 @@ createPuzzle(Nweights, Puzzle, Solution):-
 
 % consult('weights.pl'), tree5(Tree), start(Tree, Weight).
 % consult('weights.pl'), tree8(Tree), start(Tree, Weight).
-% consult('weights.pl'), testTree(Tree), start(Tree, Weight).
+% consult('weights.pl'), testTree(Tree), start(Tree, Weight). 
+% consult('weights.pl'), tree20(Tree), start(Tree, Weight).
 % consult('weights.pl'), createPuzzle(5, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(2, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(3, Puzzle, Solution), printTree(Puzzle).
@@ -193,6 +193,8 @@ createPuzzle(Nweights, Puzzle, Solution):-
 % consult('weights.pl'), createPuzzle(15, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(20, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(8, Puzzle, Solution), printTree(Puzzle).
+
+% consult('weights.pl'), graphicProblem(Tree), start(Tree, Weight).
 
 reset_timer :- statistics(walltime,_).	
 print_time :-
