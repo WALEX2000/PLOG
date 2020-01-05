@@ -14,7 +14,7 @@ start(Tree, Weight):-
     all_distinct(Weights),
     solveTree(Tree, Weight),!,
     labeling([ffc], Weights),
-    print('================================================================================='), nl,
+    print('======================================================================================================================='), nl,
     printTree(Tree), %Print the puzzle with solution
     write('Weights: '),
     write(Weights),
@@ -41,7 +41,7 @@ treeWeightsList([], []).
 treeWeightsList([(Pos|Subtree)|Rest], TotalWeights):- %For subtrees
     is_list(Subtree),
     Pos #\= 0,
-    treeWeightsList(Subtree, SubtreeWeights),
+    treeWeightsList(Subtree, SubtreeWeights), !,
     append(SubtreeWeights, Weights, TotalWeights),
     treeWeightsList(Rest, Weights).
 treeWeightsList([(Pos|Node)|Rest], [Node|RestWeights]):- %For regular weights
@@ -55,9 +55,11 @@ getTorques([(Pos|Node)|Rest], Torque):-
     NewTorque #= Torque - NodeTorque,
     getTorques(Rest, NewTorque).
 
+%For weights (leafs)
 getNodeTorque(Pos, Value, Torque):-
     (\+is_list(Value)),
     Torque #= Pos * Value.
+%For Lists (subtrees)
 getNodeTorque(Pos, Subtree, Torque):-
     is_list(Subtree),
     solveTree(Subtree, SubtreeWeight),
@@ -69,27 +71,17 @@ getTotalWeight(Nweights, Tmp, Total):-
     NewN is Nweights - 1,
     getTotalWeight(NewN, NewTmp, Total).
 
-labelNextSubtree([]).
-labelNextSubtree([(_|Node)|Rest]):-
+
+applyOrderRestriction([], _).
+applyOrderRestriction([(Pos|Node)|Rest], LastPos):-
+    \+is_list(Node),
+    Pos #> LastPos,
+    applyOrderRestriction(Rest, Pos).
+applyOrderRestriction([(Pos|Node)|Rest], LastPos):-
     is_list(Node),
-    labelRow(Node),
-    labelNextSubtree(Node),
-    labelNextSubtree(Rest).
-labelNextSubtree([(_|_)|Rest]):- labelNextSubtree(Rest).
-
-labelPuzzlePos([]).
-labelPuzzlePos(Puzzle):-
-    labelRow(Puzzle),
-    labelNextSubtree(Puzzle).
-
-labelRow([], Nodes):- length(Nodes, Length), NegLength is Length * -1, domain(Nodes, NegLength, Length).
-labelRow([(Pos|_)|Rest], Nodes):-
-    Nodes = [PrevPos|_],
-    Pos #> PrevPos,
-    labelRow(Rest, [Pos|Nodes]).
-
-labelRow([(Pos|_)|Rest]):-
-    labelRow(Rest, [Pos]).
+    Pos #> LastPos,
+    applyOrderRestriction(Node, -1000000),
+    applyOrderRestriction(Rest, Pos).
 
 %Go through every node in list and turn into a weight or a sublist
 assignForm([], Remaining, Remaining).
@@ -100,8 +92,8 @@ assignForm([(_|Node)|Rest], Remaining, NewRemaining):-
       (Choice = 1, Node = [_], Rem is Remaining - 1, assignForm(Rest, Rem, NewRemaining)) %If case of subtree create list, sub to Remaining and go to next node
      )
     );
-    (Remaining = 0, assignForm(Rest, Remaining, NewRemaining)); %If subtrees aren't needed just leave as weight
-    (Remaining > 0, Node = [_], Rem is Remaining - 1, assignForm(Rest, Rem, NewRemaining)). %In the rare case that random only selected weights but subtrees are still needed.
+    (Remaining = 0, assignForm(Rest, Remaining, NewRemaining)). %If subtrees aren't needed just leave as weight
+    %(Remaining > 0, Node = [_], Rem is Remaining - 1, assignForm(Rest, Rem, NewRemaining)). %In the rare case that random only selected weights but subtrees are still needed.
 
 getNextLine([], []).
 getNextLine([(_|Node)|Rest], NewLine):-
@@ -115,12 +107,12 @@ getNextLine([List|Rest], NewLine):- %If we get a list of lists
 generateStructure([], NextLineRemaining, NextLineRemaining).
 generateStructure([SubTree|Rest], Nweights, NextLineRemaining):-
     N is Nweights + 2,
-    Tmp is N + 1,
+    Tmp is min(N + 1, 5),
     random(2, Tmp, Nnodes), %Create a random amount of nodes
     length(SubTree, Nnodes), %Turn Subtree Node into a list with Nnodes
     Remaining is N - Nnodes,
-    assignForm(SubTree, Remaining, NewRemaining), %NewRemaining accounts for sublists
-    generateStructure(Rest, NewRemaining, NextLineRemaining).
+    assignForm(SubTree, Remaining, NewRemaining), !, %NewRemaining accounts for sublists
+    generateStructure(Rest, NewRemaining, NextLineRemaining), !.
 
 %Ends when next line is empty and remaining = 0
 generateNextLine([], 0).
@@ -132,25 +124,26 @@ generateNextLine(Puzzle, WeightsNeeded):-
 
 %Create a valid randomly created structure for our puzzle
 generateStructure(Puzzle, Nweights):-
-    Tmp is Nweights + 1,
+    Tmp is min(Nweights + 1, 5),
     random(2, Tmp, Nnodes), %Create a random amount of nodes
     length(Puzzle, Nnodes), %Turn Puzzle into a list of Nnodes
     Remaining is Nweights - Nnodes,
-    assignForm(Puzzle, Remaining, NewRemaining), %NewRemaining accounts for sublists
-    getNextLine(Puzzle, NextLine),
-    generateNextLine(NextLine, NewRemaining).
+    assignForm(Puzzle, Remaining, NewRemaining), !,%NewRemaining accounts for sublists
+    getNextLine(Puzzle, NextLine), !,
+    generateNextLine(NextLine, NewRemaining), !.
 
 rectifyNode((_|Val), NewNode):- %If it is a list
     is_list(Val), Val = [NL],
     removeDoubleLists(NL, RectifiedList),
     NewNode = (_|RectifiedList).
-rectifyNode(N, N).
+rectifyNode(N, N):- N = (_|Val), isWeight(Val).
 
+%TODO FIX THISSSSSS
 removeDoubleLists([], []).
 removeDoubleLists([Node|Rest], Puzzle):-
     rectifyNode(Node, NewNode),
     Puzzle = [NewNode|OtherNodes],
-    removeDoubleLists(Rest, OtherNodes).
+    removeDoubleLists(Rest, OtherNodes), !.
 
 getPuzzlePositions([], []).
 getPuzzlePositions([(Pos|Node)|Rest], PosList):-
@@ -164,40 +157,83 @@ getPuzzlePositions([(Pos|Node)|Rest], PosList):-
     PosList = [Pos|List],
     getPuzzlePositions(Rest, List).
 
+printAllDomains([], _).
+printAllDomains([Elem|Rest], Num):-
+    fd_set(Elem, Set),
+    Set = [[inf|-1],[1|sup]],
+    print(Num), print(': HAS INFINITE DOMAIN'),
+    nl,
+    N is Num + 1,
+    printAllDomains(Rest, N).
+printAllDomains([Elem|Rest], Num):-
+    fd_set(Elem, Set),
+    fdset_to_list(Set, List),
+    print(Num), print(': '), print(List), nl,
+    N is Num + 1,
+    printAllDomains(Rest, N).
+
+checkTimeOutFlag(success).
+checkTimeOutFlag(time_out):- write('Puzzle solving timed out.'), nl, fail.
+
 %Create a puzzle and get its solution given a number of weights in that puzzle
 createPuzzle(Nweights, Puzzle, Solution):-
     length(Solution, Nweights), %set size of Solution
     domain(Solution, 1, Nweights), %set domain of solution
     all_distinct(Solution), %specify solution is distinct
     getTotalWeight(Nweights, 0, TotalWeight),
-    generateStructure(TmpPuzzle, Nweights), %Generate puzzle structure
-    removeDoubleLists(TmpPuzzle, Puzzle), %Remove double lists inserted in generate puzzle (No other way around this)
-    treeWeightsList(Puzzle, Solution), %Bind solution to puzzle nodes
-    labelPuzzlePos(Puzzle), %assign restrictions to position
-    solveTree(Puzzle, TotalWeight), %assign restrictions
-    print(Puzzle), nl,
-    print('Oi2'), nl,
-    getPuzzlePositions(Puzzle, Pos), %get all positions and append to solution
-    append(Solution, Pos, Vars),
-    print('Oi3'), nl,
-    labeling([bisect, ffc], Vars).
+    repeat,
+        print('Generating Puzzle Structure'), nl,
+        generateStructure(TmpPuzzle, Nweights), %Generate puzzle structure
+        removeDoubleLists(TmpPuzzle, Puzzle), %Remove double lists inserted in generate puzzle (No other way around this)
+        treeWeightsList(Puzzle, Solution), %Bind solution to puzzle nodes
+        applyOrderRestriction(Puzzle, -1000000), %assign restrictions to position
+        solveTree(Puzzle, TotalWeight), %assign restrictions
+        getPuzzlePositions(Puzzle, Pos), %get all positions and append to solution
+        PosLim is min(div(Nweights,2) + 1, 6),
+        NegLim is PosLim * -1,
+        domain(Pos, NegLim, PosLim),
+        append(Solution, Pos, Vars),
+        %printAllDomains(Vars, 1), %Debug
+        print('Attempting label'), nl, nl,
+        %trace,
+        labeling([bisect, ffc, time_out(50, success)], Vars).
 
 % consult('weights.pl'), tree5(Tree), start(Tree, Weight).
+% consult('weights.pl'), tree5_1(Tree), start(Tree, Weight).
+% consult('weights.pl'), tree5_2(Tree), start(Tree, Weight).
+% consult('weights.pl'), tree5_3(Tree), start(Tree, Weight).
+% consult('weights.pl'), tree5_4(Tree), start(Tree, Weight).
+
 % consult('weights.pl'), tree8(Tree), start(Tree, Weight).
-% consult('weights.pl'), testTree(Tree), start(Tree, Weight). 
+% consult('weights.pl'), tree8_1(Tree), start(Tree, Weight).
+% consult('weights.pl'), tree8_2(Tree), start(Tree, Weight).
+% consult('weights.pl'), tree8_3(Tree), start(Tree, Weight).
+% consult('weights.pl'), tree8_4(Tree), start(Tree, Weight).
+
+% consult('weights.pl'), tree15_1(Tree), start(Tree, Weight).
+% consult('weights.pl'), tree15_2(Tree), start(Tree, Weight).
+% consult('weights.pl'), tree15_3(Tree), start(Tree, Weight).
+
 % consult('weights.pl'), tree20(Tree), start(Tree, Weight).
-% consult('weights.pl'), createPuzzle(5, Puzzle, Solution), printTree(Puzzle).
-% consult('weights.pl'), createPuzzle(2, Puzzle, Solution), printTree(Puzzle).
-% consult('weights.pl'), createPuzzle(3, Puzzle, Solution), printTree(Puzzle).
+% consult('weights.pl'), tree20_1(Tree), start(Tree, Weight).
+% consult('weights.pl'), tree20_2(Tree), start(Tree, Weight).
+
 % consult('weights.pl'), createPuzzle(4, Puzzle, Solution), printTree(Puzzle).
+% consult('weights.pl'), createPuzzle(5, Puzzle, Solution), printTree(Puzzle).
+% consult('weights.pl'), createPuzzle(8, Puzzle, Solution), printTree(Puzzle).
+% consult('weights.pl'), createPuzzle(10, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(15, Puzzle, Solution), printTree(Puzzle).
 % consult('weights.pl'), createPuzzle(20, Puzzle, Solution), printTree(Puzzle).
-% consult('weights.pl'), createPuzzle(8, Puzzle, Solution), printTree(Puzzle).
-
-% consult('weights.pl'), graphicProblem(Tree), start(Tree, Weight).
 
 reset_timer :- statistics(walltime,_).	
 print_time :-
 	statistics(walltime,[_,T]),
 	TS is ((T//10)*10)/1000,
 	nl, write('Time: '), write(TS), write('s ('), write(T), write('ms)'), nl, nl.
+
+%[(_14005;_3909),(_14269;[(_14517;_4015),(_14781;[(_15049;[(_15297;_4121),(_15561;[(_15809;_4227),(_16053;_4333)])]),(_16361;_4439),(_16605;_4545),(_16849;_4651)])])]
+%consult('weights.pl'), testCreate(8, Puzzle, Solution, [(_14005;_3909),(_14269;[(_14517;_4015),(_14781;[(_15049;[(_15297;_4121),(_15561;[(_15809;_4227),(_16053;_4333)])]),(_16361;_4439),(_16605;_4545),(_16849;_4651)])])]), printTree(Puzzle).
+
+
+%[(_24067;[(_24315;_3991),(_24579;[(_24827;_4097),(_25071;_4203),(_25315;_4309),(_25579;[(_25827;_4415),(_26071;_4521)])]),(_26387;_4627),(_26631;_4733),(_26875;_4839)]),(_27177;_4945),(_27441;[(_27689;_5051),(_27953;[(_28201;_5157),(_28445;_5263)]),(_28739;[(_28987;_5369),(_29231;_5475)])]),(_29547;_5581),(_29791;_5687),(_30035;_5793),(_30279;_5899),(_30523;_6005)]
+%consult('weights.pl'), testCreate(20, Puzzle, Solution, [(_24067;[(_24315;_3991),(_24579;[(_24827;_4097),(_25071;_4203),(_25315;_4309),(_25579;[(_25827;_4415),(_26071;_4521)])]),(_26387;_4627),(_26631;_4733),(_26875;_4839)]),(_27177;_4945),(_27441;[(_27689;_5051),(_27953;[(_28201;_5157),(_28445;_5263)]),(_28739;[(_28987;_5369),(_29231;_5475)])]),(_29547;_5581),(_29791;_5687),(_30035;_5793),(_30279;_5899),(_30523;_6005)]), printTree(Puzzle).

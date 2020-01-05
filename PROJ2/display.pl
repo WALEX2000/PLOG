@@ -18,6 +18,7 @@ depthSearch([FirstElem|Rest], Tmp, LeftMostValue):-
      (LeftMostValue = OthersLeftMostTmp)).
 
 %Writes a Char a Total number of times
+%writeRepeat(_, -1):- trace.
 writeRepeat(_, Num):- Num @< 1.
 writeRepeat(Char, Total):-
     print(Char),
@@ -170,10 +171,10 @@ printTreeLoop(Line, Margin):-
     printTreeLoop(NewLine, Margin).
 
 runLine([], _, _, List, List, _).
-runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, _):- %If Node is weight
+runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, N):- %If Node is weight
     isWeight(Node),
     runWeight(Node, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace),
-    runLine(Rest, NewPos, NewExtraSpace, TmpList, NewList, _).
+    runLine(Rest, NewPos, NewExtraSpace, TmpList, NewList, N).
 
 runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, WS):- %If node is Valid Subtree
     checkIfSubtreeValid(Node/RootGP, CurrPos, Rest),
@@ -184,10 +185,10 @@ runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, WS):- %If nod
 runLine([Node/RootGP|Rest], CurrPos, _, TmpList, NewList, Node):- %If node is impossible Subtree
     WS is RootGP - CurrPos - 1, WS < 0.
 
-runLine([Node/RootGP|Rest], CurrPos, _, TmpList, NewList, _):- %If node is invalid Subtree
-    WS is RootGP - CurrPos - 1,
+runLine([Node/RootGP|Rest], CurrPos, _, TmpList, NewList, N):- %If node is invalid Subtree
     append(TmpList, [Node/RootGP], NewTmpList),
-    runLine(Rest, RootGP, 0, NewTmpList, NewList, WS).
+    WS is RootGP - CurrPos - 1,
+    runLine(Rest, RootGP, 0, NewTmpList, NewList, N).
 
 runWeight(_, WeightGP, _, _, WeightGP, 2).
 
@@ -266,11 +267,29 @@ correctTree(Tree, NewTree):-
     ((var(ParentTree), NewTree = Tree);
      (replaceTree(Tree, ParentTree, NewParentTree, BetterTree), correctTree(BetterTree, NewTree))).
 
+printPuzzle([]).
+printPuzzle([Elem|[]]):-
+    Elem = (Pos|Val), is_list(Val),
+    print('('), print(Pos), print('|'),
+    print('['), printPuzzle(Val), print('])'),
+    printPuzzle(Rest).
+printPuzzle([Elem|Rest]):-
+    Elem = (Pos|Val), is_list(Val),
+    print('('), print(Pos), print('|'),
+    print('['), printPuzzle(Val), print(']),'),
+    printPuzzle(Rest).
+
+printPuzzle([(Pos|_)|[]]):- print('('), print(Pos), print('|_)'), printPuzzle(Rest).
+printPuzzle([(Pos|_)|Rest]):-
+    print('('), print(Pos), print('|_),'), printPuzzle(Rest).
+
+
 %Main Function to print tree
 printTree(Tree):-
-    nl, print('Display:  '), print(Tree), nl,
-    Margin = 1, %trace,
-    correctTree(Tree, NewTree), print('Oi oi?'), nl,
+    nl, printPuzzle(Tree), nl,
+    nl, print('Display:  '), print(Tree), nl, %Debug
+    Margin = 1,
+    correctTree(Tree, NewTree),
     getLeftMostPosition(NewTree, NewLeftMostValue),
     NewRootGlobalPosition is abs(NewLeftMostValue),
     nl,
