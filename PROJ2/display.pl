@@ -182,12 +182,11 @@ runLine([Node/RootGP|Rest], CurrPos, ExtraSpace, TmpList, NewList, WS):- %If nod
     runNode(Node, RootGP, CurrPos, ExtraSpace, NewPos, NewExtraSpace, WS),
     runLine(Rest, NewPos, NewExtraSpace, NewTmpList, NewList, WS).
 
-runLine([Node/RootGP|Rest], CurrPos, _, TmpList, NewList, Node):- %If node is impossible Subtree
+runLine([Node/RootGP|_], CurrPos, _, _, _, Node):- %If node is impossible Subtree
     WS is RootGP - CurrPos - 1, WS < 0.
 
-runLine([Node/RootGP|Rest], CurrPos, _, TmpList, NewList, N):- %If node is invalid Subtree
+runLine([Node/RootGP|Rest], _, _, TmpList, NewList, N):- %If node is invalid Subtree
     append(TmpList, [Node/RootGP], NewTmpList),
-    WS is RootGP - CurrPos - 1,
     runLine(Rest, RootGP, 0, NewTmpList, NewList, N).
 
 runWeight(_, WeightGP, _, _, WeightGP, 2).
@@ -226,8 +225,8 @@ checkIfChild(SubTree, Child):-
 
 %Used to get the Parent Tree
 getParentTree(_, [], _, _). %If parent wasn't in this line
-getParentTree(_, _, ParentTree, NewParentTree):- \+var(ParentTree). %If parent's already been found
-getParentTree(InvalidSubTree, [ParentTree/_|Rest], ParentTree, NewParentTree):- %For when we find parent
+getParentTree(_, _, ParentTree, _):- \+var(ParentTree). %If parent's already been found
+getParentTree(InvalidSubTree, [ParentTree/_|_], ParentTree, NewParentTree):- %For when we find parent
     checkIfChild(ParentTree, InvalidSubTree),
     multTree(ParentTree, 2, NewParentTree).
 getParentTree(InvalidSubTree, [_/_|Rest], ParentTree, NewParentTree):- %Go to next Tree in Line
@@ -271,23 +270,22 @@ printPuzzle([]).
 printPuzzle([Elem|[]]):-
     Elem = (Pos|Val), is_list(Val),
     print('('), print(Pos), print('|'),
-    print('['), printPuzzle(Val), print('])'),
-    printPuzzle(Rest).
+    print('['), printPuzzle(Val), print('])').
 printPuzzle([Elem|Rest]):-
     Elem = (Pos|Val), is_list(Val),
     print('('), print(Pos), print('|'),
     print('['), printPuzzle(Val), print(']),'),
     printPuzzle(Rest).
 
-printPuzzle([(Pos|_)|[]]):- print('('), print(Pos), print('|_)'), printPuzzle(Rest).
+printPuzzle([(Pos|_)|[]]):- print('('), print(Pos), print('|_)').
 printPuzzle([(Pos|_)|Rest]):-
     print('('), print(Pos), print('|_),'), printPuzzle(Rest).
 
 
 %Main Function to print tree
 printTree(Tree):-
-    nl, printPuzzle(Tree), nl,
-    nl, print('Display:  '), print(Tree), nl, %Debug
+    %nl, printPuzzle(Tree), nl,
+    %nl, print('Display:  '), print(Tree), nl, %Debug
     Margin = 1,
     correctTree(Tree, NewTree),
     getLeftMostPosition(NewTree, NewLeftMostValue),

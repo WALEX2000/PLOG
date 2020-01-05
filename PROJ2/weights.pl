@@ -138,7 +138,6 @@ rectifyNode((_|Val), NewNode):- %If it is a list
     NewNode = (_|RectifiedList).
 rectifyNode(N, N):- N = (_|Val), isWeight(Val).
 
-%TODO FIX THISSSSSS
 removeDoubleLists([], []).
 removeDoubleLists([Node|Rest], Puzzle):-
     rectifyNode(Node, NewNode),
@@ -172,9 +171,6 @@ printAllDomains([Elem|Rest], Num):-
     N is Num + 1,
     printAllDomains(Rest, N).
 
-checkTimeOutFlag(success).
-checkTimeOutFlag(time_out):- write('Puzzle solving timed out.'), nl, fail.
-
 %Create a puzzle and get its solution given a number of weights in that puzzle
 createPuzzle(Nweights, Puzzle, Solution):-
     length(Solution, Nweights), %set size of Solution
@@ -182,7 +178,7 @@ createPuzzle(Nweights, Puzzle, Solution):-
     all_distinct(Solution), %specify solution is distinct
     getTotalWeight(Nweights, 0, TotalWeight),
     repeat,
-        print('Generating Puzzle Structure'), nl,
+        %print('Generating Puzzle Structure'), nl,
         generateStructure(TmpPuzzle, Nweights), %Generate puzzle structure
         removeDoubleLists(TmpPuzzle, Puzzle), %Remove double lists inserted in generate puzzle (No other way around this)
         treeWeightsList(Puzzle, Solution), %Bind solution to puzzle nodes
@@ -196,7 +192,7 @@ createPuzzle(Nweights, Puzzle, Solution):-
         %printAllDomains(Vars, 1), %Debug
         print('Attempting label'), nl, nl,
         %trace,
-        labeling([bisect, ffc, time_out(50, success)], Vars).
+        labeling([bisect, ffc, time_out(50, success)], Vars), !.
 
 % consult('weights.pl'), tree5(Tree), start(Tree, Weight).
 % consult('weights.pl'), tree5_1(Tree), start(Tree, Weight).
@@ -230,10 +226,3 @@ print_time :-
 	statistics(walltime,[_,T]),
 	TS is ((T//10)*10)/1000,
 	nl, write('Time: '), write(TS), write('s ('), write(T), write('ms)'), nl, nl.
-
-%[(_14005;_3909),(_14269;[(_14517;_4015),(_14781;[(_15049;[(_15297;_4121),(_15561;[(_15809;_4227),(_16053;_4333)])]),(_16361;_4439),(_16605;_4545),(_16849;_4651)])])]
-%consult('weights.pl'), testCreate(8, Puzzle, Solution, [(_14005;_3909),(_14269;[(_14517;_4015),(_14781;[(_15049;[(_15297;_4121),(_15561;[(_15809;_4227),(_16053;_4333)])]),(_16361;_4439),(_16605;_4545),(_16849;_4651)])])]), printTree(Puzzle).
-
-
-%[(_24067;[(_24315;_3991),(_24579;[(_24827;_4097),(_25071;_4203),(_25315;_4309),(_25579;[(_25827;_4415),(_26071;_4521)])]),(_26387;_4627),(_26631;_4733),(_26875;_4839)]),(_27177;_4945),(_27441;[(_27689;_5051),(_27953;[(_28201;_5157),(_28445;_5263)]),(_28739;[(_28987;_5369),(_29231;_5475)])]),(_29547;_5581),(_29791;_5687),(_30035;_5793),(_30279;_5899),(_30523;_6005)]
-%consult('weights.pl'), testCreate(20, Puzzle, Solution, [(_24067;[(_24315;_3991),(_24579;[(_24827;_4097),(_25071;_4203),(_25315;_4309),(_25579;[(_25827;_4415),(_26071;_4521)])]),(_26387;_4627),(_26631;_4733),(_26875;_4839)]),(_27177;_4945),(_27441;[(_27689;_5051),(_27953;[(_28201;_5157),(_28445;_5263)]),(_28739;[(_28987;_5369),(_29231;_5475)])]),(_29547;_5581),(_29791;_5687),(_30035;_5793),(_30279;_5899),(_30523;_6005)]), printTree(Puzzle).
